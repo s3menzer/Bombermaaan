@@ -1205,7 +1205,7 @@ void CGame::OnKeyUp (WPARAM wParam, LPARAM lParam)
         // Assume we have to change the display mode
         bool SetDisplayMode = true;
 
-        //! Change display mode if this is a F1-F4 key
+        //! Change display mode if this is a F1-F5 key
         switch (wParam)
         {
             //! Display modes #1 and #2 are not available in the 32-pixels version
@@ -1216,6 +1216,7 @@ void CGame::OnKeyUp (WPARAM wParam, LPARAM lParam)
 #endif
             case VK_F3 : DisplayMode = DISPLAYMODE_FULL3; break;
             case VK_F4 : DisplayMode = DISPLAYMODE_WINDOWED; break;
+            case VK_F5 : DisplayMode = DISPLAYMODE_FULL4; break;
             default    : SetDisplayMode = false; break;
         }
 

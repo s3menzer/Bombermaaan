@@ -39,19 +39,19 @@ These are the steps how to get Bombermaaan successfully compiled on Windows 32 b
   https://www.microsoft.com/downloads/details.aspx?FamilyID=7b0b0339-613a-46e6-ab4d-080d4d4a8c4e&DisplayLang=en
 
 - Download and install the DirectX SDK
-  http://www.microsoft.com/downloads/details.aspx?FamilyID=86CF7FA2-E953-475C-ABDE-F016E4F7B61A&displaylang=en<br>
-  dxsdk_apr2007.exe, about 440 MB
+  https://github.com/NovaRain/DXSDK_Collection)<br>
+  DXSDK_Aug2007, about 68 MB
 
 - Download SDL development libraries
   http://www.libsdl.org/download-1.2.php<br>
-  SDL-devel-1.2.13-VC8.zip, about 607 kB (http://www.libsdl.org/release/SDL-devel-1.2.13-VC8.zip)<br>
+  SDL-devel-1.2.15-VC.zip, about 607 kB (https://www.libsdl.org/release/SDL-devel-1.2.15-VC.zip)<br>
   The VC8 file is also working for VC9<br>
   Copy folder SDL-1.2.13 from the zip file to src/third-party/ folder and rename it to "SDL"<br>
   Copy all DLL files from the lib subdirectory to the directory src/_Test_/Release, where Bombermaaan.exe will be generated (needed at runtime)
   
 - Download SDL_mixer development libraries
   http://www.libsdl.org/projects/SDL_mixer/<br>
-  SDL_mixer-devel-1.2.8-VC8.zip, about 332 kB (http://www.libsdl.org/projects/SDL_mixer/release/SDL_mixer-devel-1.2.8-VC8.zip)<br>
+  SDL_mixer-devel-1.2.12-VC.zip, about 332 kB (https://www.libsdl.org/projects/SDL_mixer/release/SDL_mixer-devel-1.2.12-VC.zip)<br>
   The VC8 file is also working for VC9<br>
   Copy folder SDL_mixer-1.2.8 from the zip file to src/third-party/ folder and rename it to "SDL_mixer"<br>
   Copy all DLL files from the lib subdirectory to the directory src/_Test_/Release, where Bombermaaan.exe will be generated (needed at runtime)

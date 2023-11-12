@@ -4,6 +4,7 @@
 	Version="9,00"
 	Name="Bombermaaan"
 	ProjectGUID="{CF0E1EDA-9BF5-4995-B6D9-AA07ED4BEB21}"
+	RootNamespace="Bombermaaan"
 	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
@@ -47,7 +48,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;C:\Program Files\Microsoft DirectX SDK (April 2007)\Include&quot;;..\DXSDK\INCLUDE;&quot;../third-party/SDL_mixer/include&quot;;&quot;../third-party/SDL/include&quot;"
+				AdditionalIncludeDirectories="&quot;..\third-party\DXSDK_Aug2007\Include\&quot;;&quot;..\third-party\SDL_mixer-1.2.12\include&quot;;&quot;..\third-party\SDL-1.2-release-1.2.15\include\&quot;"
 				PreprocessorDefinitions="WIN32,_DEBUG,_WINDOWS"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -80,7 +81,7 @@
 				OutputFile=".\..\_Test_\Debug/Bombermaaan.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="&quot;C:\Program Files\Microsoft DirectX SDK (April 2007)\Lib\x86&quot;;../DXSDK/LIB;&quot;../third-party/SDL/lib&quot;;&quot;../third-party/SDL_mixer\lib&quot;"
+				AdditionalLibraryDirectories="&quot;..\third-party\DXSDK_Aug2007\Lib\x86&quot;;&quot;..\third-party\SDL-1.2-release-1.2.15\VisualC\SDLmain\Release&quot;;&quot;..\third-party\SDL-1.2-release-1.2.15\VisualC\SDL\Release&quot;;&quot;..\third-party\SDL_mixer-1.2.12\lib\x86&quot;"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\..\_Test_\Debug/Bombermaaan.pdb"
 				GenerateMapFile="true"
@@ -144,7 +145,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="&quot;C:\Program Files\Microsoft DirectX SDK (April 2007)\Include&quot;;..\DXSDK\INCLUDE;&quot;../third-party/SDL_mixer/include&quot;;&quot;../third-party/SDL/include&quot;"
+				AdditionalIncludeDirectories="&quot;..\third-party\DXSDK_Aug2007\Include\&quot;;&quot;..\third-party\SDL_mixer-1.2.12\include&quot;;&quot;..\third-party\SDL-1.2-release-1.2.15\include\&quot;"
 				PreprocessorDefinitions="WIN32,NDEBUG,_WINDOWS"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -177,7 +178,7 @@
 				OutputFile=".\..\_Test_\Release/Bombermaaan.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="&quot;C:\Program Files\Microsoft DirectX SDK (April 2007)\Lib\x86&quot;;../DXSDK/LIB;&quot;../third-party/SDL/lib&quot;;&quot;../third-party/SDL_mixer\lib&quot;"
+				AdditionalLibraryDirectories="&quot;..\third-party\DXSDK_Aug2007\Lib\x86&quot;;&quot;..\third-party\SDL-1.2-release-1.2.15\VisualC\SDLmain\Release&quot;;&quot;..\third-party\SDL-1.2-release-1.2.15\VisualC\SDL\Release&quot;;&quot;..\third-party\SDL_mixer-1.2.12\lib\x86&quot;"
 				SubSystem="2"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"

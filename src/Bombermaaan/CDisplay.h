@@ -45,7 +45,8 @@ enum EDisplayMode
     DISPLAYMODE_FULL1,
     DISPLAYMODE_FULL2,
     DISPLAYMODE_FULL3,
-    DISPLAYMODE_WINDOWED
+    DISPLAYMODE_WINDOWED,
+    DISPLAYMODE_FULL4
 };
 
 //******************************************************************************************************************************
@@ -65,7 +66,7 @@ private:
     int             m_ViewOriginX;      //!< Top left corner of the game view
     int             m_ViewOriginY;
     
-    bool            Create (int Width, int Height, bool FullScreen); //!< (Re)Create the DirectDraw/SDLVideo interface and (re)load the sprite tables given the resolution
+    bool            Create (int Width, int Height, int Depth, bool FullScreen); //!< (Re)Create the DirectDraw/SDLVideo interface and (re)load the sprite tables given the resolution
     bool            LoadSprites (int SpriteTableWidth, int SpriteTableHeight, int SpriteWidth, int SpriteHeight, bool Transparent, int BMP_ID); //!< Load a sprite table given its bitmap data and its properties.
 
 public:

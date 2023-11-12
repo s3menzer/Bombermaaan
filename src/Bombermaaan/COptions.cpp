@@ -417,6 +417,10 @@ void COptions::WriteXMLData()
     configLevel->SetAttribute( "value", m_Level );
     config->LinkEndChild( configLevel );
 
+    TiXmlComment * comment2 = new TiXmlComment();
+    comment2->SetValue("\n          DisplayModes\n\n          1: 320x240x16 full screen\n          2: 512x384x16 full screen\n          3: 640x480x16 full screen\n          4: 480x442 windowed\n          5: 640x480x32 full screen\n          "  );
+    config->LinkEndChild( comment2 );
+
     // DisplayMode
     TiXmlElement* configDisplayMode = new TiXmlElement( "DisplayMode" );
     configDisplayMode->SetAttribute( "value", (int) m_DisplayMode );
