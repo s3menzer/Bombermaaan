@@ -32,6 +32,57 @@
 #include <switch.h>
 #include "updater.hpp"
 #include "version.hpp"
+#include <cstdio>
+
+namespace
+{
+    void showUpdateProgress(const char* message, void*)
+    {
+        if (message == NULL)
+            return;
+
+        std::printf("%s\n", message);
+        consoleUpdate(NULL);
+    }
+
+    void waitForGameStart(bool updateInstalled)
+    {
+        if (updateInstalled)
+            std::printf("\nUpdate complete. ");
+        else
+            std::printf("\n");
+        std::printf("Press any button to start the game.\n");
+        consoleUpdate(NULL);
+
+        // Accept input from either split Joy-Con as well as handheld mode.
+        padConfigureInput(2, HidNpadStyleSet_NpadStandard);
+        PadState pad;
+        padInitialize(&pad,
+                      HidNpadIdType_No1,
+                      HidNpadIdType_No2,
+                      HidNpadIdType_Handheld);
+
+        // Do not treat the button used to launch the application as the
+        // confirmation press.
+        padUpdate(&pad);
+        while (appletMainLoop() && padGetButtons(&pad) != 0)
+        {
+            consoleUpdate(NULL);
+            svcSleepThread(10 * 1000 * 1000);
+            padUpdate(&pad);
+        }
+
+        while (appletMainLoop())
+        {
+            padUpdate(&pad);
+            if (padGetButtonsDown(&pad) != 0)
+                break;
+
+            consoleUpdate(NULL);
+            svcSleepThread(10 * 1000 * 1000);
+        }
+    }
+}
 #endif
 
 /**
@@ -69,9 +120,27 @@ int main (int argc, char **argv)
     updateConfig.targetPath = "sdmc:/switch/Bombermaaan.nro";
     updateConfig.platform = "switch";
 
+    PrintConsole* updateConsole = consoleInit(NULL);
+    if (updateConsole != NULL)
+    {
+        std::printf("Bombermaaan update\n\n");
+        consoleUpdate(updateConsole);
+        updateConfig.progressCallback = showUpdateProgress;
+        updateConfig.progressUserData = updateConsole;
+    }
+
     // The updater mounts the SD card itself and runs before ROMFS/SDL
     // initialization, just like the Cross//Roads implementation.
-    updater::run(updateConfig);
+    const updater::Result updateResult = updater::run(updateConfig);
+
+    if (updateConsole != NULL)
+    {
+        waitForGameStart(updateResult == updater::Result::Updated);
+
+        consoleExit(updateConsole);
+        updateConfig.progressCallback = NULL;
+        updateConfig.progressUserData = NULL;
+    }
 
     if (romfsInit() != 0)
         return false;
@@ -113,6 +182,8 @@ int main (int argc, char **argv)
     // A running NRO cannot always be replaced immediately.  Running the
     // updater once more on exit lets it install the update or leave a
     // .pending file for the next launch.
+    updateConfig.progressCallback = NULL;
+    updateConfig.progressUserData = NULL;
     updater::run(updateConfig);
     romfsExit();
 #endif

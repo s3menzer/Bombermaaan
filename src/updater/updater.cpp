@@ -56,6 +56,27 @@ namespace updater
         const SocketHandle InvalidSocket = -1;
 #endif
 
+        struct Progress
+        {
+            Progress(ProgressCallback callback, void* userData)
+                : callback_(callback), userData_(userData)
+            {
+            }
+
+            void report(const std::string& message) const
+            {
+                std::fprintf(stderr, "[update] %s\n", message.c_str());
+                if (callback_ != nullptr)
+                {
+                    callback_(message.c_str(), userData_);
+                }
+            }
+
+        private:
+            ProgressCallback callback_;
+            void* userData_;
+        };
+
         std::string trim(const std::string& value)
         {
             std::size_t first = 0;
@@ -484,7 +505,8 @@ namespace updater
 
         bool httpGet(const std::string& urlString,
                      const std::string& userAgent,
-                     HttpResponse& response)
+                     HttpResponse& response,
+                     const Progress& progress)
         {
             Url url;
             if (!parseHttpUrl(urlString, url))
@@ -492,6 +514,7 @@ namespace updater
                 return false;
             }
 
+            progress.report("Initializing network connection...");
             NetworkSession network;
             if (!network.start())
             {
@@ -499,6 +522,7 @@ namespace updater
                 return false;
             }
 
+            progress.report("Resolving update server " + url.host + "...");
             addrinfo hints{};
             hints.ai_socktype = SOCK_STREAM;
             hints.ai_family = AF_UNSPEC;
@@ -522,6 +546,7 @@ namespace updater
                 }
 
                 setSocketTimeout(candidate);
+                progress.report("Connecting to update server " + url.host + ":" + url.port + "...");
                 if (::connect(candidate, address->ai_addr, address->ai_addrlen) == 0)
                 {
                     connected = candidate;
@@ -542,9 +567,16 @@ namespace updater
                 "GET " + url.path + " HTTP/1.1\r\n"
                 "Host: " + url.host + "\r\n"
                 "Connection: close\r\n"
+                // The manifest is mutable.  Do not allow a proxy or a
+                // server-side cache to make a freshly published build
+                // number invisible to the updater.
+                "Cache-Control: no-cache, no-store, max-age=0\r\n"
+                "Pragma: no-cache\r\n"
                 "User-Agent: " + userAgent + "\r\n"
                 "\r\n";
 
+            progress.report("Requesting " + url.path + "...");
+            progress.report("Receiving server response...");
             bool success = sendAll(connected, request);
             std::vector<unsigned char> rawResponse;
             unsigned char buffer[16 * 1024];
@@ -941,17 +973,18 @@ namespace updater
             return false;
         }
 
-        void installPendingUpdate(const std::string& targetPath)
+        bool installPendingUpdate(const std::string& targetPath)
         {
             const std::string pendingPath = targetPath + ".pending";
             if (!fileExists(pendingPath))
             {
-                return;
+                return false;
             }
 
             if (replaceExistingFile(pendingPath, targetPath))
             {
                 std::fprintf(stderr, "[update] installed previously staged update\n");
+                return true;
             }
             else
             {
@@ -960,30 +993,52 @@ namespace updater
                     "[update] could not install staged update; keeping %s\n",
                     pendingPath.c_str());
             }
+            return false;
         }
     }
 
     Result run(const Config& config)
     {
+        const Progress progress(config.progressCallback, config.progressUserData);
+
 #ifdef __SWITCH__
+        progress.report("Mounting SD card...");
         fsdevMountSdmc();
 #endif
 
         const std::string targetPath = config.targetPath.empty()
             ? defaultTargetPath(config)
             : config.targetPath;
-        installPendingUpdate(targetPath);
+        progress.report("Checking for a previously staged update...");
+        // A pending update was downloaded by a previous launch.  Install it
+        // before doing another network check.  The running process may still
+        // contain the old build's compile-time number, so checking the
+        // manifest again here would immediately download the same artifact
+        // for a second time.
+        if (installPendingUpdate(targetPath))
+        {
+            progress.report("Installed a previously staged update.");
+            return Result::Updated;
+        }
 
+        progress.report("Reading update configuration...");
         const std::string manifestUrl = configuredManifestUrl(config);
         std::fprintf(stderr, "[update] checking %s\n", manifestUrl.c_str());
+        progress.report("Downloading update manifest...");
 
         HttpResponse manifestResponse;
-        if (!httpGet(manifestUrl, config.applicationName + "/" + config.currentVersion, manifestResponse))
+        if (!httpGet(
+                manifestUrl,
+                config.applicationName + "/" + config.currentVersion,
+                manifestResponse,
+                progress))
         {
             std::fprintf(stderr, "[update] check failed; starting current version\n");
+            progress.report("Update check failed; starting current version.");
             return Result::Failed;
         }
 
+        progress.report("Parsing update manifest...");
         const std::string manifest(
             manifestResponse.body.begin(),
             manifestResponse.body.end());
@@ -996,16 +1051,20 @@ namespace updater
             !extractValue(manifest, "download", downloadUrl))
         {
             std::fprintf(stderr, "[update] manifest is missing version/download\n");
+            progress.report("Update manifest is incomplete.");
             return Result::Failed;
         }
-        extractValue(manifest, "build", remoteBuildText);
+        const bool hasRemoteBuild =
+            extractValue(manifest, "build", remoteBuildText);
         extractValue(manifest, "sha256", expectedHash);
         extractValue(manifest, "platform", platform);
 
         int remoteBuild = 0;
-        if (!remoteBuildText.empty() && !parseBuildNumber(remoteBuildText, remoteBuild))
+        if (hasRemoteBuild &&
+            !parseBuildNumber(remoteBuildText, remoteBuild))
         {
             std::fprintf(stderr, "[update] manifest has an invalid build number\n");
+            progress.report("Update manifest has an invalid build number.");
             return Result::Failed;
         }
 
@@ -1020,52 +1079,79 @@ namespace updater
         {
             std::fprintf(stderr, "[update] manifest is for platform %s, current platform is %s\n",
                          platform.c_str(), currentPlatform.c_str());
+            progress.report("Update is for a different platform.");
             return Result::NoUpdate;
         }
 
         const int versionComparison = compareVersions(remoteVersion, config.currentVersion);
         const bool newerVersion = versionComparison > 0;
-        const bool newerBuildOfSameVersion =
-            versionComparison == 0 && remoteBuild > config.currentBuild;
-        if (!newerVersion && !newerBuildOfSameVersion)
+        // Build numbers are monotonically increasing across the Switch
+        // builds.  They must therefore be considered independently of the
+        // marketing version: a rebuild with the same (or even accidentally
+        // stale) version still needs to update when its build is newer.
+        const bool newerBuild =
+            hasRemoteBuild && remoteBuild > config.currentBuild;
+        if (!newerVersion && !newerBuild)
         {
             std::fprintf(
                 stderr,
-                "[update] current version %s build %d is up to date\n",
+                "[update] current version %s build %d is up to date "
+                "(remote version %s build %d)\n",
                 config.currentVersion.c_str(),
-                config.currentBuild);
+                config.currentBuild,
+                remoteVersion.c_str(),
+                remoteBuild);
+            progress.report("The current version is up to date.");
             return Result::NoUpdate;
         }
 
+        {
+            std::ostringstream message;
+            message << "New version " << remoteVersion
+                    << " build " << remoteBuild << " is available.";
+            progress.report(message.str());
+        }
         std::fprintf(
             stderr,
             "[update] downloading version %s build %d\n",
             remoteVersion.c_str(),
             remoteBuild);
+        progress.report("Downloading new version...");
         HttpResponse artifactResponse;
-        if (!httpGet(downloadUrl, config.applicationName + "/" + config.currentVersion, artifactResponse))
+        if (!httpGet(
+                downloadUrl,
+                config.applicationName + "/" + config.currentVersion,
+                artifactResponse,
+                progress))
         {
             std::fprintf(stderr, "[update] download failed; starting current version\n");
+            progress.report("Download failed; starting current version.");
             return Result::Failed;
         }
 
+        progress.report("Verifying downloaded file...");
         if (!expectedHash.empty() &&
             lowerCase(trim(expectedHash)) != sha256(artifactResponse.body))
         {
             std::fprintf(stderr, "[update] checksum mismatch; refusing update\n");
+            progress.report("Checksum verification failed; refusing update.");
             return Result::Failed;
         }
 
         const std::string temporaryPath = targetPath + ".download";
+        progress.report("Writing downloaded file...");
         if (!writeBinaryFile(temporaryPath, artifactResponse.body))
         {
             std::fprintf(stderr, "[update] could not write %s\n",
                          temporaryPath.c_str());
+            progress.report("Could not write downloaded file.");
             return Result::Failed;
         }
 
+        progress.report("Installing update...");
         if (!replaceTarget(temporaryPath, targetPath))
         {
+            progress.report("Update was downloaded but could not be installed.");
             return Result::Failed;
         }
 
@@ -1074,6 +1160,7 @@ namespace updater
             "[update] installed version %s build %d; restart to activate it\n",
             remoteVersion.c_str(),
             remoteBuild);
+        progress.report("Update installed; restart to activate it.");
         return Result::Updated;
     }
 }

@@ -4,6 +4,8 @@
 
 namespace updater
 {
+    typedef void (*ProgressCallback)(const char* message, void* userData);
+
     enum class Result
     {
         NoUpdate,
@@ -23,6 +25,8 @@ namespace updater
         std::string executablePath;
         std::string targetPath;
         std::string platform;
+        ProgressCallback progressCallback = nullptr;
+        void* progressUserData = nullptr;
     };
 
     Result run(const Config& config);

@@ -15,7 +15,7 @@ APP_VERSION := 1.4.1
 TARGET := Bombermaaan
 BUILD := build
 ROMFS := romfs
-NO_ICON := 1
+APP_ICON := $(TOPDIR)/Bombermaaan-icon.jpg
 
 SDL12_COMPAT := $(TOPDIR)/third-party/sdl12-compat-static
 SDL12_INCLUDE := $(SDL12_COMPAT)/include
@@ -65,9 +65,10 @@ export INCLUDE := $(SDL12_FLAGS) $(PORT_FLAGS) $(LIBNX_FLAGS) $(PROJECT_FLAGS) $
 export LIBPATHS := $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 export CFLAGS CXXFLAGS ASFLAGS LDFLAGS LIBS CPPFLAGS
 
-# Embed the NACP as well as the RomFS.  Apart from making the title/version
+# Embed the icon, NACP, and RomFS.  Apart from making the title/version
 # visible to hbmenu, this makes it possible to verify on the console that the
 # freshly rebuilt NRO was copied instead of an older ABI-incompatible one.
+NROFLAGS += --icon=$(APP_ICON)
 NROFLAGS += --nacp=$(TOPDIR)/$(TARGET).nacp
 NROFLAGS += --romfsdir=$(TOPDIR)/$(ROMFS)
 
@@ -109,7 +110,7 @@ DEPENDS := $(OFILES:.o=.d)
 .PHONY: all
 all: $(OUTPUT).nro
 
-$(OUTPUT).nro: $(OUTPUT).elf $(OUTPUT).nacp
+$(OUTPUT).nro: $(OUTPUT).elf $(OUTPUT).nacp $(APP_ICON)
 	@elf2nro $< $@ $(NROFLAGS)
 
 $(OUTPUT).elf: $(OFILES)
