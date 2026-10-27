@@ -39,6 +39,7 @@
 #include "CMatch.h"
 #include "CScores.h"
 #include "CControls.h"
+#include "version.hpp"
 
 ENetworkMode    NetworkMode = NETWORKMODE_LOCAL;
 SOCKET          MySocket = INVALID_SOCKET;
@@ -83,10 +84,6 @@ SOCKET          ClientSocket = INVALID_SOCKET;
 #else
 #  define NAME_OF_BOMBERMAN_DLL "libbombermaaan.so"
 #endif
-
-// Bombermaaan version (build is suffixed with an "e" if the build is an experimental release)
-#define BOMBERMAAAN_VERSION_STRING      "1.4.1"
-#define BOMBERMAAAN_BUILD_STRING        "658e"
 
 //******************************************************************************************************************************
 //******************************************************************************************************************************
@@ -279,6 +276,12 @@ bool CGame::Create (char **pCommandLine, int pCommandLineCount)
     // and $HOME/.Bombermaaan when NOT called with --ignore-home-dir (see below) on Linux.
     std::string dynamicDataFolder;
 
+#ifdef BOMBERMAAAN_SWITCH
+    // Switch assets are packed into romfs and are mounted before CGame starts.
+    // Keep the game read-only on the packaged filesystem.
+    bool useAppDataFolder = false;
+    std::string pgmDirectory = "romfs:/";
+#else
 #ifdef WIN32
     // The "--use-appdata-dir" switch creates config and log file in the user's %APPDATA% directory (Windows)
     bool useAppDataFolder = ( strstr( pCommandLine, "--use-appdata-dir" ) != NULL );
@@ -379,6 +382,8 @@ bool CGame::Create (char **pCommandLine, int pCommandLineCount)
     {
         pgmDirectory.clear(); // use current directory
     }
+#endif
+
 #endif
 
     if ( useAppDataFolder )
@@ -940,6 +945,16 @@ void CGame::OnWindowActive (void)
 
     m_Timer.Update();
     m_Input.GetMainInput().Update();
+
+#ifdef BOMBERMAAAN_SWITCH
+    // Use the Switch minus button as the application's quit button.
+    if (m_Input.GetDirectInput().IsSwitchMinusPressed())
+    {
+        FinishGameMode ();
+        StartGameMode (GAMEMODE_EXIT);
+        return;
+    }
+#endif
     
     //! If the menu yes/no is not active
     if (!m_MenuYesNo.IsActive())

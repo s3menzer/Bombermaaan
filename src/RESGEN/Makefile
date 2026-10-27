@@ -30,10 +30,15 @@ clean: clean-custom
 	$(RM) $(BIN) $(OBJ) $(RESGENBIN) ResData.c $(BIN) $(BASENAME) $(BIN).$(REVISION) *~
 
 install: all
-	$(INSTALL) $(BIN) $(BIN).$(REVISION) $(prefix)/lib
+	mkdir -p "$(prefix)/lib"
+	$(INSTALL) -m 755 "$(BIN).$(REVISION)" "$(prefix)/lib/$(BIN).$(REVISION)"
+	$(SYMLINK) "$(BIN).$(REVISION)" "$(prefix)/lib/$(BIN)"
+	$(SYMLINK) "$(BIN).$(REVISION)" "$(prefix)/lib/$(BASENAME)"
 
 uninstall: all
-	$(RM) $(prefix)/lib/$(BIN) $(prefix)/lib/$(BIN).$(REVISION)
+	$(RM) "$(prefix)/lib/$(BIN)" \
+	       "$(prefix)/lib/$(BIN).$(REVISION)" \
+	       "$(prefix)/lib/$(BASENAME)"
 
 $(BIN): $(OBJ)
 	$(CC) $(LDFLAGS) -o $(BIN).$(REVISION) $(LINKOBJ) $(LIBS)
@@ -48,4 +53,3 @@ ResData.c: $(RESGENBIN)
 
 ResGen: $(RES) ResGen.cpp
 	$(HOSTCPP) -o ResGen ResGen.cpp $(CXXFLAGS)
-

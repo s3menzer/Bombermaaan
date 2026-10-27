@@ -189,6 +189,12 @@ void COptions::SetDefaultValues(void)
     for (int i = 0 ; i < MAX_PLAYERS ; i++)
         m_PlayerInput[i] = CONFIGURATION_KEYBOARD_1 + i;
 
+#ifdef BOMBERMAAAN_SWITCH
+    // The first Switch controller is exposed as joystick 1 by CSDLInput.
+    // Keep the desktop keyboard defaults for the remaining local players.
+    m_PlayerInput[0] = CONFIGURATION_JOYSTICK_1;
+#endif
+
     // Set default keyboard keys and joystick buttons
     m_Control[CONFIGURATION_KEYBOARD_1][CONTROL_UP]      = KEYBOARD_NUMPAD8;
     m_Control[CONFIGURATION_KEYBOARD_1][CONTROL_DOWN]    = KEYBOARD_NUMPAD5;

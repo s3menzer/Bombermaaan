@@ -28,6 +28,12 @@
 #include "STDAFX.H"
 #include "CGame.h"
 
+#ifdef BOMBERMAAAN_SWITCH
+#include <switch.h>
+#include "updater.hpp"
+#include "version.hpp"
+#endif
+
 /**
  *  \mainpage Bombermaaan source code documentation
  *
@@ -51,6 +57,26 @@ int APIENTRY WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdl
 int main (int argc, char **argv)
 #endif
 {
+#ifdef BOMBERMAAAN_SWITCH
+    updater::Config updateConfig;
+    updateConfig.applicationName = "Bombermaaan";
+    updateConfig.configFileBaseName = "bombermaaan";
+    updateConfig.currentVersion = BOMBERMAAAN_VERSION_STRING;
+    updateConfig.currentBuild = BOMBERMAAAN_BUILD_NUMBER;
+    updateConfig.defaultManifestUrl = BOMBERMAAAN_DEFAULT_MANIFEST_URL;
+    updateConfig.executablePath =
+        (argc > 0 && argv != NULL && argv[0] != NULL) ? argv[0] : "";
+    updateConfig.targetPath = "sdmc:/switch/Bombermaaan.nro";
+    updateConfig.platform = "switch";
+
+    // The updater mounts the SD card itself and runs before ROMFS/SDL
+    // initialization, just like the Cross//Roads implementation.
+    updater::run(updateConfig);
+
+    if (romfsInit() != 0)
+        return false;
+#endif
+
 #ifndef WIN32
     HINSTANCE hInstance = 0;
     char **lpCmdline = argv;
@@ -67,6 +93,9 @@ int main (int argc, char **argv)
 #endif
     {
         // Get out, failure
+#ifdef BOMBERMAAAN_SWITCH
+        romfsExit();
+#endif
         return false;
     }
 
@@ -80,6 +109,13 @@ int main (int argc, char **argv)
     Game.Destroy ();
 
     // Everything went right
+#ifdef BOMBERMAAAN_SWITCH
+    // A running NRO cannot always be replaced immediately.  Running the
+    // updater once more on exit lets it install the update or leave a
+    // .pending file for the next launch.
+    updater::run(updateConfig);
+    romfsExit();
+#endif
     return true;
 }
 

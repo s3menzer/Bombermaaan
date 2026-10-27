@@ -186,7 +186,11 @@ void CSound::Destroy (void)
 
 bool CSound::LoadSample (ESample Sample, int ResourceID)
 {
+#ifdef BOMBERMAAAN_SWITCH
+    SDL2_RWops *rwSample;
+#else
     SDL_RWops *rwSample;
+#endif
 
     // Check if the sample slot is free
     ASSERT (m_Samples[Sample] == NULL);
@@ -202,11 +206,19 @@ bool CSound::LoadSample (ESample Sample, int ResourceID)
     }
     
     // Convert pData to SDL_RWops
+#ifdef BOMBERMAAAN_SWITCH
+    rwSample = SDL2_RWFromMem(pData, DataSize);
+#else
     rwSample = SDL_RWFromMem(pData, DataSize);
+#endif
   
     // Open Sample
     m_Samples[Sample] = Mix_LoadWAV_RW(rwSample, 0);
+#ifdef BOMBERMAAAN_SWITCH
+    SDL2_FreeRW(rwSample);
+#else
     SDL_FreeRW(rwSample);
+#endif
 	
     if (!m_Samples[Sample])
     {
@@ -247,7 +259,11 @@ void CSound::FreeSample (ESample Sample)
 
 bool CSound::LoadSong (ESong Song, int ResourceID)
 {
+#ifdef BOMBERMAAAN_SWITCH
+    SDL2_RWops *rwSong;
+#else
     SDL_RWops *rwSong;
+#endif
 
     // Check if the song slot is free
     ASSERT (m_CurrentSong == NULL);
@@ -263,11 +279,19 @@ bool CSound::LoadSong (ESong Song, int ResourceID)
     }
     
     // Convert pData to SDL_RWops
+#ifdef BOMBERMAAAN_SWITCH
+    rwSong = SDL2_RWFromMem(pData, DataSize);
+#else
     rwSong = SDL_RWFromMem(pData, DataSize);
+#endif
   
     // Open Sample
-    m_CurrentSong = Mix_LoadMUS_RW(rwSong);
+    m_CurrentSong = Mix_LoadMUS_RW(rwSong, 0);
+#ifdef BOMBERMAAAN_SWITCH
+    SDL2_FreeRW(rwSong);
+#else
     SDL_FreeRW(rwSong);
+#endif
 	
     if (!m_CurrentSong) {
         // Log failure

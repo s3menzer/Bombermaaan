@@ -45,6 +45,10 @@ CSDLInput::CSDLInput (void)
     m_hWnd = NULL;
     m_hInstance = NULL;
     m_Ready = false;
+    m_KeyboardOpened = false;
+#ifdef BOMBERMAAAN_SWITCH
+    m_SwitchPadReady = false;
+#endif
 }
 
 //******************************************************************************************************************************
@@ -86,6 +90,31 @@ bool CSDLInput::Create (void)
         // Prepare the friendly name for each key
         MakeKeyFriendlyNames ();
 
+#ifdef BOMBERMAAAN_SWITCH
+        /*
+         * SDL12-compat does not provide the SDL 1.2 joystick events used by
+         * the original input code on every Switch/runtime combination.  Keep
+         * one virtual joystick in the existing input abstraction and feed it
+         * from libnx's native pad API instead.
+         */
+        padConfigureInput(1, HidNpadStyleSet_NpadStandard);
+        padInitializeDefault(&m_SwitchPad);
+        m_SwitchPadReady = true;
+
+        SJoystick *pJoystick = new SJoystick;
+
+        if (pJoystick == NULL)
+        {
+            theLog.WriteLine ("SDLInput        => !!! Could not allocate memory for the Switch controller.");
+            return false;
+        }
+
+        memset (&pJoystick->State, 0, sizeof(pJoystick->State));
+        pJoystick->Opened = false;
+        pJoystick->pDevice = NULL;
+        m_pJoysticks.push_back (pJoystick);
+        theLog.WriteLine ("SDLInput        => Native Switch controller was added.");
+#else
         // Create all joysticks that are installed on the system
         for(int i=0; i < SDL_NumJoysticks(); i++ ) 
         {
@@ -114,6 +143,7 @@ bool CSDLInput::Create (void)
             theLog.WriteLine ("SDLInput        => A joystick was added.");
             
         }
+#endif
         
         m_Ready = true;
     }
@@ -136,7 +166,8 @@ void CSDLInput::Destroy (void)
         for (unsigned int Index = 0 ; Index < m_pJoysticks.size() ; Index++)
         {
             // Release the joystick SDLinput device
-            SDL_JoystickClose(m_pJoysticks[Index]->pDevice);
+            if (m_pJoysticks[Index]->pDevice != NULL)
+                SDL_JoystickClose(m_pJoysticks[Index]->pDevice);
             m_pJoysticks[Index]->pDevice = NULL;
             
             // Delete the joystick variable
@@ -151,6 +182,12 @@ void CSDLInput::Destroy (void)
 
         // Log we released the SDLInput object
         theLog.WriteLine ("SDLInput        => SDLInput object was released.");
+
+        m_Ready = false;
+        m_KeyboardOpened = false;
+#ifdef BOMBERMAAAN_SWITCH
+        m_SwitchPadReady = false;
+#endif
     }
 }
 
@@ -170,6 +207,9 @@ bool CSDLInput::UpdateDevice (SDL_Joystick *pDevice, void *pState, int StateSize
 
 void CSDLInput::UpdateKeyboard (void)
 {
+#ifdef BOMBERMAAAN_SWITCH
+    UpdateSwitchPad ();
+#endif
 }
 
 //******************************************************************************************************************************
@@ -184,11 +224,99 @@ void CSDLInput::UpdateJoystick (int Joystick)
     // Check if the joystick is at least supposed to be opened
     ASSERT (m_pJoysticks[Joystick]->Opened);
 
+#ifdef BOMBERMAAAN_SWITCH
+    /*
+     * The native controller is sampled by UpdateKeyboard(), which is called
+     * once at the beginning of every game frame by CMainInput.  Do not call
+     * padUpdate() here as well: doing so would advance the libnx button
+     * history twice in one frame.
+     */
+    if (Joystick == 0 && m_SwitchPadReady)
+        return;
+#endif
+
     // Update the device and get the latest real opened state
 //    m_pJoysticks[Joystick]->Opened = UpdateDevice (m_pJoysticks[Joystick]->pDevice, 
 //                                                   &m_pJoysticks[Joystick]->State, 
 //                                                   sizeof(m_pJoysticks[Joystick]->State));
 }
+
+#ifdef BOMBERMAAAN_SWITCH
+//******************************************************************************************************************************
+//******************************************************************************************************************************
+//******************************************************************************************************************************
+
+void CSDLInput::UpdateSwitchPad (void)
+{
+    if (!m_SwitchPadReady || m_pJoysticks.empty())
+        return;
+
+    padUpdate(&m_SwitchPad);
+
+    const u64 buttons = padGetButtons(&m_SwitchPad);
+    const bool up = (buttons & HidNpadButton_AnyUp) != 0;
+    const bool down = (buttons & HidNpadButton_AnyDown) != 0;
+    const bool left = (buttons & HidNpadButton_AnyLeft) != 0;
+    const bool right = (buttons & HidNpadButton_AnyRight) != 0;
+    const bool action1 = (buttons & HidNpadButton_A) != 0;
+    const bool action2 = (buttons & HidNpadButton_B) != 0;
+
+    /*
+     * Feed the old keyboard-based menu/player code as well as the joystick
+     * state.  This keeps existing configuration files usable and means that
+     * the first controller works immediately, without requiring a trip to the
+     * controls screen.
+     */
+    SetKey(KEYBOARD_UP, up);
+    SetKey(KEYBOARD_DOWN, down);
+    SetKey(KEYBOARD_LEFT, left);
+    SetKey(KEYBOARD_RIGHT, right);
+    SetKey(KEYBOARD_RETURN, action1);
+    SetKey(KEYBOARD_SPACE, action1);
+    SetKey(KEYBOARD_BACK, action2);
+    SetKey(KEYBOARD_ESCAPE, action2);
+
+    // Default keyboard configuration #1 (numpad movement, PageUp/Home action).
+    SetKey(KEYBOARD_NUMPAD8, up);
+    SetKey(KEYBOARD_NUMPAD5, down);
+    SetKey(KEYBOARD_NUMPAD4, left);
+    SetKey(KEYBOARD_NUMPAD6, right);
+    SetKey(KEYBOARD_PRIOR, action1);
+    SetKey(KEYBOARD_HOME, action2);
+
+    // Default keyboard configuration #5 (cursor movement, Ctrl/Shift action).
+    SetKey(KEYBOARD_RCONTROL, action1);
+    SetKey(KEYBOARD_RSHIFT, action2);
+
+    HidAnalogStickState stick = padGetStickPos(&m_SwitchPad, 0);
+    int axisX = stick.x;
+    // libnx reports positive Y as up; the legacy SDL path expects positive Y
+    // to mean down.
+    int axisY = -stick.y;
+
+    // Make the D-pad usable in matches too, not only in menus.
+    if (left)  axisX = JOYSTICK_MINIMUM_AXIS;
+    if (right) axisX = JOYSTICK_MAXIMUM_AXIS;
+    if (up)    axisY = JOYSTICK_MINIMUM_AXIS;
+    if (down)  axisY = JOYSTICK_MAXIMUM_AXIS;
+
+    SJoystick *pJoystick = m_pJoysticks[0];
+    pJoystick->State.lX = axisX;
+    pJoystick->State.lY = axisY;
+    memset (pJoystick->State.rgbButtons, 0, sizeof(pJoystick->State.rgbButtons));
+
+    pJoystick->State.rgbButtons[0] = (buttons & HidNpadButton_A)     ? 0x80 : 0;
+    pJoystick->State.rgbButtons[1] = (buttons & HidNpadButton_B)     ? 0x80 : 0;
+    pJoystick->State.rgbButtons[2] = (buttons & HidNpadButton_X)     ? 0x80 : 0;
+    pJoystick->State.rgbButtons[3] = (buttons & HidNpadButton_Y)     ? 0x80 : 0;
+    pJoystick->State.rgbButtons[4] = (buttons & HidNpadButton_L)     ? 0x80 : 0;
+    pJoystick->State.rgbButtons[5] = (buttons & HidNpadButton_R)     ? 0x80 : 0;
+    pJoystick->State.rgbButtons[6] = (buttons & HidNpadButton_ZL)    ? 0x80 : 0;
+    pJoystick->State.rgbButtons[7] = (buttons & HidNpadButton_ZR)    ? 0x80 : 0;
+    pJoystick->State.rgbButtons[9] = (buttons & HidNpadButton_Plus)  ? 0x80 : 0;
+    pJoystick->State.rgbButtons[10] = (buttons & HidNpadButton_Minus) ? 0x80 : 0;
+}
+#endif
 
 //******************************************************************************************************************************
 //******************************************************************************************************************************

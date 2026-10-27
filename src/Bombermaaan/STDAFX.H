@@ -46,9 +46,14 @@
 #else
 #include "winreplace.h"
 #include <errno.h>
+#ifdef BOMBERMAAAN_SWITCH
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#else
 #include <arpa/inet.h>
 #include <sys/io.h>
 #include <sys/socket.h>
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
