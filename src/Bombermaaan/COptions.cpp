@@ -50,9 +50,10 @@
 #define CONFIGURATION_KEYBOARD_4      3
 #define CONFIGURATION_KEYBOARD_5      4
 #define CONFIGURATION_JOYSTICK_1      5
+#define LEGACY_MAX_PLAYER_INPUT       10
 
 #ifdef BOMBERMAAAN_SWITCH
-#define CONFIGURATION_REVISION        5
+#define CONFIGURATION_REVISION        6
 #else
 #define CONFIGURATION_REVISION        1
 #endif
@@ -196,7 +197,7 @@ void COptions::SetDefaultValues(void)
         m_PlayerInput[i] = CONFIGURATION_KEYBOARD_1 + i;
 
 #ifdef BOMBERMAAAN_SWITCH
-    // Expose the four native Switch controller slots as the first four
+    // Expose the first four native Switch controller slots as the first four
     // players.  The desktop build keeps its original keyboard defaults.
     for (int Player = 0; Player < 4; Player++)
     {
@@ -268,9 +269,9 @@ void COptions::SetDefaultValues(void)
 bool COptions::LoadConfiguration (void)
 {
 #ifdef BOMBERMAAAN_SWITCH
-    // Older Switch configuration files only contained the original
-    // one/two-controller defaults. Reapply the four-controller defaults once
-    // when such a file is encountered.
+    // Older Switch configuration files predate the eight-controller input
+    // list. Reapply the existing first-four controller defaults once when
+    // such a file is encountered.
     bool switchPlayerDefaultsNeedMigration = false;
 #endif
 
@@ -291,7 +292,10 @@ bool COptions::LoadConfiguration (void)
         fread(&m_BattleCount, sizeof(int), 1, pConfigFile);
         fread(m_BomberType, sizeof(EBomberType), MAX_PLAYERS, pConfigFile);
         fread(m_PlayerInput, sizeof(int), MAX_PLAYERS, pConfigFile);
-        fread(m_Control, sizeof(int), MAX_PLAYER_INPUT * NUM_CONTROLS, pConfigFile);
+        // The binary format always contained five keyboard and five joystick
+        // configurations. Do not use the larger current Switch count here.
+        fread(m_Control, sizeof(int),
+              LEGACY_MAX_PLAYER_INPUT * NUM_CONTROLS, pConfigFile);
         fread(&m_Level, sizeof(int), 1, pConfigFile);
 
         // The configuration file is not needed anymore

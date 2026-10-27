@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+"${SCRIPT_DIR}/docker-build.sh"
+
 # Upload the NRO first and the manifest second.  This ordering prevents a
 # client from seeing a manifest that points at an artifact not yet present on
 # the server.
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET="${RSYNC_TARGET:-pi:/var/www/html/switch/}"
 
 if ! command -v rsync >/dev/null 2>&1; then

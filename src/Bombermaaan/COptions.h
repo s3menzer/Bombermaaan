@@ -65,7 +65,11 @@ enum EActionAIAlive
 //******************************************************************************************************************************
 //******************************************************************************************************************************
 
+#ifdef BOMBERMAAAN_SWITCH
+#define MAX_PLAYER_INPUT        13      //!< Five keyboard and eight Switch joystick configurations
+#else
 #define MAX_PLAYER_INPUT        10
+#endif
 #define NUM_CONTROLS            6
 
 #define CONTROL_UP      0

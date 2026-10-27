@@ -100,7 +100,7 @@ bool CSDLInput::Create (void)
         BombermaaanSDL2_EnableEvents ();
 
         /*
-         * Keep the four slots used by the existing player configuration, but
+         * Keep eight slots used by the existing player configuration, but
          * fill them from SDL2's logical controller devices. SDL2 performs the
          * Joy-Con horizontal-layout normalization before exposing A/B and the
          * d-pad buttons.

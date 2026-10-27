@@ -32,7 +32,7 @@
 
 #ifdef BOMBERMAAAN_SWITCH
 #include "SDL2Controller.h"
-#define SWITCH_CONTROLLER_COUNT 4
+#define SWITCH_CONTROLLER_COUNT 8
 #endif
 
 //******************************************************************************************************************************

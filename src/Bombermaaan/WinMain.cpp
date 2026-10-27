@@ -47,15 +47,19 @@ namespace
 
     void waitForButton()
     {
-        // Accept input from all four controller slots, split Joy-Cons, and
+        // Accept input from all eight controller slots, split Joy-Cons, and
         // handheld mode.
-        padConfigureInput(4, HidNpadStyleSet_NpadStandard);
+        padConfigureInput(8, HidNpadStyleSet_NpadStandard);
         PadState pad;
         padInitialize(&pad,
                       HidNpadIdType_No1,
                       HidNpadIdType_No2,
                       HidNpadIdType_No3,
                       HidNpadIdType_No4,
+                      HidNpadIdType_No5,
+                      HidNpadIdType_No6,
+                      HidNpadIdType_No7,
+                      HidNpadIdType_No8,
                       HidNpadIdType_Handheld);
 
         // Do not treat the button used to launch the application as the
