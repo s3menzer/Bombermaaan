@@ -45,15 +45,8 @@ namespace
         consoleUpdate(NULL);
     }
 
-    void waitForGameStart(bool updateInstalled)
+    void waitForButton()
     {
-        if (updateInstalled)
-            std::printf("\nUpdate complete. ");
-        else
-            std::printf("\n");
-        std::printf("Press any button to start the game.\n");
-        consoleUpdate(NULL);
-
         // Accept input from either split Joy-Con as well as handheld mode.
         padConfigureInput(2, HidNpadStyleSet_NpadStandard);
         PadState pad;
@@ -81,6 +74,23 @@ namespace
             consoleUpdate(NULL);
             svcSleepThread(10 * 1000 * 1000);
         }
+    }
+
+    void showUpdateComplete()
+    {
+        std::printf(
+            "\nUpdate installed successfully.\n"
+            "Please restart Bombermaaan to use the new version.\n"
+            "Press any button to close the application.\n");
+        consoleUpdate(NULL);
+        waitForButton();
+    }
+
+    void showStartPrompt()
+    {
+        std::printf("\nPress any button to start the game.\n");
+        consoleUpdate(NULL);
+        waitForButton();
     }
 }
 #endif
@@ -135,12 +145,21 @@ int main (int argc, char **argv)
 
     if (updateConsole != NULL)
     {
-        waitForGameStart(updateResult == updater::Result::Updated);
+        if (updateResult == updater::Result::Updated)
+            showUpdateComplete();
+        else
+            showStartPrompt();
 
         consoleExit(updateConsole);
         updateConfig.progressCallback = NULL;
         updateConfig.progressUserData = NULL;
     }
+
+    // The running process contains the old executable.  Do not start the
+    // game after replacing the NRO; close now so the next launch uses the
+    // newly installed version.
+    if (updateResult == updater::Result::Updated)
+        return 0;
 
     if (romfsInit() != 0)
         return false;
@@ -179,12 +198,6 @@ int main (int argc, char **argv)
 
     // Everything went right
 #ifdef BOMBERMAAAN_SWITCH
-    // A running NRO cannot always be replaced immediately.  Running the
-    // updater once more on exit lets it install the update or leave a
-    // .pending file for the next launch.
-    updateConfig.progressCallback = NULL;
-    updateConfig.progressUserData = NULL;
-    updater::run(updateConfig);
     romfsExit();
 #endif
     return true;
