@@ -31,13 +31,8 @@
 #include "SDL.h"
 
 #ifdef BOMBERMAAAN_SWITCH
-#ifdef __cplusplus
-extern "C" {
-#endif
-#include <switch/runtime/pad.h>
-#ifdef __cplusplus
-}
-#endif
+#include "SDL2Controller.h"
+#define SWITCH_CONTROLLER_COUNT 4
 #endif
 
 //******************************************************************************************************************************
@@ -173,6 +168,9 @@ typedef struct SDLJOYSTATE {
 struct SJoystick
 {
     SDL_Joystick    *pDevice;        //!< Pointer on the SDLInput input device
+#ifdef BOMBERMAAAN_SWITCH
+    BombermaaanSDL2Controller *pController; //!< SDL2 logical controller on Switch
+#endif
     SDLJOYSTATE      State;          //!< Most recent state of the joystick, filled on last update (has been DIJOYSTATE)
     bool             Opened;         //!< Is the joystick _supposed_ to be opened? Updated on each general update.
 };
@@ -196,10 +194,9 @@ private:
     vector<SJoystick*>      m_pJoysticks;   //!< All joystick SDLInput devices installed in the system
 
 #ifdef BOMBERMAAAN_SWITCH
-    PadState                m_SwitchPad;    //!< Native Switch controller state
-    bool                    m_SwitchPadReady;
+    bool                    m_SwitchGameControllerReady;
 
-    void                    UpdateSwitchPad (void);
+    void                    UpdateSwitchControllers (void);
 #endif
 
     bool                    UpdateDevice (SDL_Joystick *pDevice, void *pState, int StateSize);
@@ -314,8 +311,8 @@ inline void CSDLInput::OpenJoystick (int Joystick)
     ASSERT (Joystick >= 0 && Joystick < (int)m_pJoysticks.size ());
 
 #ifdef BOMBERMAAAN_SWITCH
-    // Joystick 0 is backed by libnx rather than an SDL device.
-    if (Joystick == 0)
+    // Switch joysticks are backed by libnx rather than SDL devices.
+    if (Joystick >= 0 && Joystick < SWITCH_CONTROLLER_COUNT)
     {
         m_pJoysticks[Joystick]->Opened = true;
         return;
@@ -344,8 +341,8 @@ inline void CSDLInput::CloseJoystick (int Joystick)
     ASSERT (Joystick >= 0 && Joystick < (int)m_pJoysticks.size ());
 
 #ifdef BOMBERMAAAN_SWITCH
-    // Joystick 0 is backed by libnx rather than an SDL device.
-    if (Joystick == 0)
+    // Switch joysticks are backed by libnx rather than SDL devices.
+    if (Joystick >= 0 && Joystick < SWITCH_CONTROLLER_COUNT)
     {
         m_pJoysticks[Joystick]->Opened = false;
         return;
@@ -435,8 +432,23 @@ inline void CSDLInput::SetJoystickButton (int Joystick, int Button, bool onoff)
 #ifdef BOMBERMAAAN_SWITCH
 inline bool CSDLInput::IsSwitchMinusPressed (void)
 {
-    return m_SwitchPadReady &&
-           (padGetButtonsDown(&m_SwitchPad) & HidNpadButton_Minus) != 0;
+    if (!m_SwitchGameControllerReady)
+        return false;
+
+    for (int Controller = 0;
+         Controller < SWITCH_CONTROLLER_COUNT;
+         Controller++)
+    {
+        BombermaaanSDL2Controller* pController =
+            m_pJoysticks[Controller]->pController;
+
+        if (pController != NULL &&
+            BombermaaanSDL2_GetAttached(pController) &&
+            BombermaaanSDL2_GetBack(pController) != 0)
+            return true;
+    }
+
+    return false;
 }
 #endif
 

@@ -23,11 +23,13 @@ SDL12_SOURCE := $(SDL12_COMPAT)/src/SDL12_compat.c
 UPDATER_SOURCE_DIR := $(TOPDIR)/../updater
 
 GAME_CPPFILES := $(filter-out CDirectDraw.cpp CDirectInput.cpp,$(notdir $(wildcard $(TOPDIR)/../Bombermaaan/*.cpp)))
+SDL2_CONTROLLER_CPPFILES := SDL2Controller.cpp
 TINYXML_CPPFILES := tinystr.cpp tinyxml.cpp tinyxmlerror.cpp tinyxmlparser.cpp
-CPPFILES := $(GAME_CPPFILES) $(TINYXML_CPPFILES) updater.cpp
+CPPFILES := $(GAME_CPPFILES) $(SDL2_CONTROLLER_CPPFILES) $(TINYXML_CPPFILES) updater.cpp
 CFILES := ResData.c
 
 CPP_SOURCE_DIRS := $(TOPDIR)/../Bombermaaan $(TOPDIR)/../third-party/tinyxml $(UPDATER_SOURCE_DIR)
+CPP_SOURCE_DIRS += $(TOPDIR)
 C_SOURCE_DIRS := $(TOPDIR)/../RESGEN
 vpath %.cpp $(CPP_SOURCE_DIRS)
 vpath %.c $(C_SOURCE_DIRS)

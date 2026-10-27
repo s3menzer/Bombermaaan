@@ -29,6 +29,16 @@
 
 #include "STDAFX.H"
 #include "CGame.h"
+
+#ifdef BOMBERMAAAN_SWITCH
+#ifdef __cplusplus
+extern "C" {
+#endif
+#include <switch/runtime/pad.h>
+#ifdef __cplusplus
+}
+#endif
+#endif
 #include "CWindow.h"
 #include "COptions.h"
 #include "CDisplay.h"
@@ -517,6 +527,10 @@ bool CGame::Create (char **pCommandLine, int pCommandLineCount)
 
     if ((SDL_Init(SDL_INIT_AUDIO) == -1)) // in WIN32 we need AUDIO for SDL_mixer (replacing FMOD)
 #else
+    // SDL2's Switch backend enumerates the configured Npad slots during
+    // initialization. Configure them before SDL starts so its logical
+    // SDL_GameController devices include detached Joy-Cons.
+    padConfigureInput(4, HidNpadStyleSet_NpadStandard);
     if ((SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_JOYSTICK) == -1))
 #endif
     { 

@@ -51,6 +51,12 @@
 #define CONFIGURATION_KEYBOARD_5      4
 #define CONFIGURATION_JOYSTICK_1      5
 
+#ifdef BOMBERMAAAN_SWITCH
+#define CONFIGURATION_REVISION        5
+#else
+#define CONFIGURATION_REVISION        1
+#endif
+
 // This check ensures we've also set NUMBER_OF_KEYBOARD_CONFIGURATIONS in CInput.h appropriate
 #if NUMBER_OF_KEYBOARD_CONFIGURATIONS != CONFIGURATION_JOYSTICK_1
 #error "Mismatch between first joystick input and number of keyboard configurations"
@@ -190,9 +196,13 @@ void COptions::SetDefaultValues(void)
         m_PlayerInput[i] = CONFIGURATION_KEYBOARD_1 + i;
 
 #ifdef BOMBERMAAAN_SWITCH
-    // The first Switch controller is exposed as joystick 1 by CSDLInput.
-    // Keep the desktop keyboard defaults for the remaining local players.
-    m_PlayerInput[0] = CONFIGURATION_JOYSTICK_1;
+    // Expose the four native Switch controller slots as the first four
+    // players.  The desktop build keeps its original keyboard defaults.
+    for (int Player = 0; Player < 4; Player++)
+    {
+        m_BomberType[Player] = BOMBERTYPE_MAN;
+        m_PlayerInput[Player] = CONFIGURATION_JOYSTICK_1 + Player;
+    }
 #endif
 
     // Set default keyboard keys and joystick buttons
@@ -257,6 +267,13 @@ void COptions::SetDefaultValues(void)
 
 bool COptions::LoadConfiguration (void)
 {
+#ifdef BOMBERMAAAN_SWITCH
+    // Older Switch configuration files only contained the original
+    // one/two-controller defaults. Reapply the four-controller defaults once
+    // when such a file is encountered.
+    bool switchPlayerDefaultsNeedMigration = false;
+#endif
+
     // Try to open the old configuration file
     FILE* pConfigFile = fopen( oldconfigFileName.c_str(), "rb" );
 
@@ -279,6 +296,10 @@ bool COptions::LoadConfiguration (void)
 
         // The configuration file is not needed anymore
         fclose( pConfigFile );
+
+#ifdef BOMBERMAAAN_SWITCH
+        switchPlayerDefaultsNeedMigration = true;
+#endif
     }
 
 
@@ -295,6 +316,11 @@ bool COptions::LoadConfiguration (void)
             confRevision->QueryIntAttribute( "value", &tempRevision );
 
         theLog.WriteLine( "Options         => Configuration file was successfully loaded and is at revision %d.", tempRevision );
+
+#ifdef BOMBERMAAAN_SWITCH
+        switchPlayerDefaultsNeedMigration =
+            tempRevision < CONFIGURATION_REVISION;
+#endif
 
         ReadIntFromXML( configDoc, "TimeUp", "minutes", &m_TimeUpMinutes );
         ReadIntFromXML( configDoc, "TimeUp", "seconds", &m_TimeUpSeconds );
@@ -367,6 +393,20 @@ bool COptions::LoadConfiguration (void)
 
     }
 
+#ifdef BOMBERMAAAN_SWITCH
+    if (switchPlayerDefaultsNeedMigration)
+    {
+        m_BomberType[0] = BOMBERTYPE_MAN;
+        m_BomberType[1] = BOMBERTYPE_MAN;
+        m_BomberType[2] = BOMBERTYPE_MAN;
+        m_BomberType[3] = BOMBERTYPE_MAN;
+        m_BomberType[4] = BOMBERTYPE_OFF;
+
+        for (int Player = 0; Player < 4; Player++)
+            m_PlayerInput[Player] = CONFIGURATION_JOYSTICK_1 + Player;
+    }
+#endif
+
     //! We always return true since it doesn't matter if the configuration file could not be loaded
     // Success
     return true;
@@ -396,9 +436,9 @@ void COptions::WriteXMLData()
     TiXmlElement * config = new TiXmlElement( "Configuration" );
     root->LinkEndChild( config );
 
-    //! The revision number is currently 1
+    //! The revision number is platform-specific for controller defaults.
     TiXmlElement* configRev = new TiXmlElement( "ConfigRevision" );
-    configRev->SetAttribute( "value", 1 );
+    configRev->SetAttribute( "value", CONFIGURATION_REVISION );
     config->LinkEndChild( configRev );
 
     // TimeUp (when will arena close begin)

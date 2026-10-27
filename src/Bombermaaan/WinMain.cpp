@@ -47,12 +47,15 @@ namespace
 
     void waitForButton()
     {
-        // Accept input from either split Joy-Con as well as handheld mode.
-        padConfigureInput(2, HidNpadStyleSet_NpadStandard);
+        // Accept input from all four controller slots, split Joy-Cons, and
+        // handheld mode.
+        padConfigureInput(4, HidNpadStyleSet_NpadStandard);
         PadState pad;
         padInitialize(&pad,
                       HidNpadIdType_No1,
                       HidNpadIdType_No2,
+                      HidNpadIdType_No3,
+                      HidNpadIdType_No4,
                       HidNpadIdType_Handheld);
 
         // Do not treat the button used to launch the application as the
@@ -169,8 +172,8 @@ int main (int argc, char **argv)
     HINSTANCE hInstance = 0;
     char **lpCmdline = argv;
 #endif
-	
-    // Create the CGame instance    
+
+    // Create the CGame instance
     CGame Game (hInstance, lpCmdline);
 
     // If creating the game failed
