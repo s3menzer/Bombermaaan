@@ -237,8 +237,8 @@ SBomberSpriteTable CBomber::m_BomberSpriteTables[MAX_NUMBER_OF_STATES] =
 //! Bomber sprite layer
 #define BOMBER_SPRITELAYER  50
 
-#define SICK_SPRITE_ROW_FULL        MAX_PLAYERS             //!< The row with the full black bomber sprites (this is the number of maximum players)
-#define SICK_SPRITE_ROW_SHADOW      (MAX_PLAYERS + 1)       //!< The row with the black shadow bomber sprites (one row below SICK_SPRITE_ROW_FULL)
+#define SICK_SPRITE_ROW_FULL        PLAYER_COLOR_COUNT     //!< The row with the full black bomber sprites
+#define SICK_SPRITE_ROW_SHADOW      (PLAYER_COLOR_COUNT + 1) //!< The row with the black shadow bomber sprites
 
 /**
  *  \brief Fuse only the first bomb found?
@@ -1247,7 +1247,7 @@ void CBomber::Animate (float DeltaTime)
     if (m_Sickness == SICK_NOTSICK || m_Dead != DEAD_ALIVE)
     {
         // Give him its player color        
-        m_Sprite += m_Player * m_BomberSpriteTables[m_BomberState].NumberOfSpritesPerColor;
+        m_Sprite += (m_Player % PLAYER_COLOR_COUNT) * m_BomberSpriteTables[m_BomberState].NumberOfSpritesPerColor;
     }
     // If he is sick and alive
     else
@@ -1268,7 +1268,7 @@ void CBomber::Animate (float DeltaTime)
         else if (m_SickTimer < ANIMSICK_TIME2)
         {
             // Player color
-            m_Sprite += m_Player * m_BomberSpriteTables[m_BomberState].NumberOfSpritesPerColor;
+            m_Sprite += (m_Player % PLAYER_COLOR_COUNT) * m_BomberSpriteTables[m_BomberState].NumberOfSpritesPerColor;
 
             // If it is the invisibility contamination, make the bomber invisible during this time
             if ( m_Sickness == SICK_INVISIBILITY ) {

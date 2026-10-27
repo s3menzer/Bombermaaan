@@ -246,6 +246,9 @@ bool CLevel::LoadVersion1( ifstream& File ) {
                 case '3' : m_ArenaData[x][y] = BLOCKTYPE_REDBOMBER;   break;
                 case '4' : m_ArenaData[x][y] = BLOCKTYPE_BLUEBOMBER;  break;
                 case '5' : m_ArenaData[x][y] = BLOCKTYPE_GREENBOMBER; break;
+                case '6' : m_ArenaData[x][y] = BLOCKTYPE_PLAYER6;     break;
+                case '7' : m_ArenaData[x][y] = BLOCKTYPE_PLAYER7;     break;
+                case '8' : m_ArenaData[x][y] = BLOCKTYPE_PLAYER8;     break;
                 case 'R' : m_ArenaData[x][y] = BLOCKTYPE_MOVEBOMB_RIGHT; break;
                 case 'D' : m_ArenaData[x][y] = BLOCKTYPE_MOVEBOMB_DOWN;  break;
                 case 'L' : m_ArenaData[x][y] = BLOCKTYPE_MOVEBOMB_LEFT;  break;
@@ -329,11 +332,10 @@ bool CLevel::LoadVersion2( std::string filename )
     }
 
     // Read the maximum number of players allowed with this level
-    // At the moment this must be set to 5
-    // Maybe this is changed in the future
+    // A level may support any number from one to the engine maximum.
     value = atoi( iniFile.GetValue( "General", "MaxPlayers", "0" ) );
-    if ( value != 5 ) {
-        theLog.WriteLine ("Options         => !!! Invalid maximum players %d. Only %d is allowed.", value, 5 );
+    if ( value < 1 || value > MAX_PLAYERS ) {
+        theLog.WriteLine ("Options         => !!! Invalid maximum players %d. Values from 1 to %d are allowed.", value, MAX_PLAYERS );
         return false;
     }
 
@@ -390,6 +392,9 @@ bool CLevel::LoadVersion2( std::string filename )
                 case '3' : m_ArenaData[x][y] = BLOCKTYPE_REDBOMBER;   break;
                 case '4' : m_ArenaData[x][y] = BLOCKTYPE_BLUEBOMBER;  break;
                 case '5' : m_ArenaData[x][y] = BLOCKTYPE_GREENBOMBER; break;
+                case '6' : m_ArenaData[x][y] = BLOCKTYPE_PLAYER6;     break;
+                case '7' : m_ArenaData[x][y] = BLOCKTYPE_PLAYER7;     break;
+                case '8' : m_ArenaData[x][y] = BLOCKTYPE_PLAYER8;     break;
                 case 'R' : m_ArenaData[x][y] = BLOCKTYPE_MOVEBOMB_RIGHT; break;
                 case 'D' : m_ArenaData[x][y] = BLOCKTYPE_MOVEBOMB_DOWN;  break;
                 case 'L' : m_ArenaData[x][y] = BLOCKTYPE_MOVEBOMB_LEFT;  break;
@@ -473,7 +478,7 @@ bool CLevel::CheckMaxNumberOfItems( unsigned int *sumOfMaxItems )
         *sumOfMaxItems += m_NumberOfItemsInWalls[i];
     }
 
-    // count initial bomber skills (note: count the worst case with five players)
+    // count initial bomber skills (note: count the worst case with all players)
     for (i = BOMBERSKILL_DUMMYFIRST + 1; i < NUMBER_OF_BOMBERSKILLS; i++)
     {
         // initial skills like bombs and flames will not be lost

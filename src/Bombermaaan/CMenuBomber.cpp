@@ -334,7 +334,7 @@ void CMenuBomber::OnDisplay (void)
                                 NULL,
                                 NULL,
                                 BOMBER_HEAD_SPRITE_TABLE,
-                                Player + (m_Blinking[Player] ? MAX_PLAYERS : 0), // Blinking bomber head sprite or not
+                                (Player % PLAYER_COLOR_COUNT) + (m_Blinking[Player] ? PLAYER_COLOR_COUNT : 0), // Blinking bomber head sprite or not
                                 MENUBOMBER_SPRITELAYER,
                                 BOMBER_HEAD_PRIORITY);
 

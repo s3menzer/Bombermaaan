@@ -670,7 +670,7 @@ void CVictory::Display (void)
                                             NULL,                            // Draw entire sprite
                                             NULL,                            // No need to clip
                                             VICTORY_BOMBER_SPRITETABLE, 
-                                            m_WinnerBomberSprite + Player * BOMBER_SPRITES_COUNT_PER_COLOR, 
+                                            m_WinnerBomberSprite + (Player % PLAYER_COLOR_COUNT) * BOMBER_SPRITES_COUNT_PER_COLOR,
                                             VICTORY_BOMBER_LAYER,
                                             PRIORITY_UNUSED);
                  
@@ -689,7 +689,7 @@ void CVictory::Display (void)
                                             NULL,                            // Draw entire sprite
                                             NULL,                            // No need to clip
                                             VICTORY_BOMBER_SPRITETABLE, 
-                                            m_LoserBomberSprite + Player * BOMBER_SPRITES_COUNT_PER_COLOR, 
+                                            m_LoserBomberSprite + (Player % PLAYER_COLOR_COUNT) * BOMBER_SPRITES_COUNT_PER_COLOR,
                                             VICTORY_BOMBER_LAYER,
                                             PRIORITY_UNUSED);
 
@@ -749,7 +749,7 @@ void CVictory::Display (void)
                                     NULL,                            // Draw entire sprite
                                     &Clip,                           // Clip to game view
                                     ConfettiSpriteTable,
-                                    WinnerPlayer * CONFETTIS_COUNT_PER_COLOR + m_Confettis[Confetti].Sprite,  // Get the confetti sprite of the color of the winner
+                                    (WinnerPlayer % PLAYER_COLOR_COUNT) * CONFETTIS_COUNT_PER_COLOR + m_Confettis[Confetti].Sprite,  // Get the confetti sprite of the color of the winner
                                     VICTORY_CONFETTIS_LAYER,
                                     PRIORITY_UNUSED);
         }

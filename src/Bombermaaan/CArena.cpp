@@ -187,6 +187,31 @@ void CArena::Create (void)
                     
                     break;
                 }
+
+                case BLOCKTYPE_PLAYER6 :
+                {
+                    if (m_pOptions->GetBomberType(PLAYER_6) != BOMBERTYPE_OFF)
+                        NewBomber (X, Y, PLAYER_6);
+
+                    break;
+                }
+
+                case BLOCKTYPE_PLAYER7 :
+                {
+                    if (m_pOptions->GetBomberType(PLAYER_7) != BOMBERTYPE_OFF)
+                        NewBomber (X, Y, PLAYER_7);
+
+                    break;
+                }
+
+                case BLOCKTYPE_PLAYER8 :
+                {
+                    if (m_pOptions->GetBomberType(PLAYER_8) != BOMBERTYPE_OFF)
+                        NewBomber (X, Y, PLAYER_8);
+
+                    break;
+                }
+
                 default :
                     break;
             }

@@ -65,11 +65,8 @@ void CDebug::Create()
     m_CanBombersDie = true;
     m_CanBombersBeSick = true;
     m_CanBombersKick = true;
-    m_IsComputerConsoleActive[0] = false;
-    m_IsComputerConsoleActive[1] = false;
-    m_IsComputerConsoleActive[2] = false;
-    m_IsComputerConsoleActive[3] = false;
-    m_IsComputerConsoleActive[4] = false;
+    for (int Player = 0; Player < MAX_PLAYERS; Player++)
+        m_IsComputerConsoleActive[Player] = false;
 
     // Actually set the speed of the game
     m_pTimer->SetSpeed (m_GameSpeed);

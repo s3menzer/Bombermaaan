@@ -71,7 +71,7 @@ private:
     bool m_CanBombersDie;
     bool m_CanBombersBeSick;
     bool m_CanBombersKick;
-    bool m_IsComputerConsoleActive [5];
+    bool m_IsComputerConsoleActive [MAX_PLAYERS];
 };
 
 //******************************************************************************************************************************
@@ -111,7 +111,7 @@ inline bool CDebug::CanBombersKick()
 inline bool CDebug::IsComputerConsoleActive (int Player)
 {
     ASSERT(Player >= 0);
-    ASSERT(Player < 5);
+    ASSERT(Player < MAX_PLAYERS);
 
     return m_IsComputerConsoleActive[Player];
 }

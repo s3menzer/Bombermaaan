@@ -297,6 +297,24 @@ void CMenuLevel::OnDisplay (void)
                                                 NULL, NULL, 57, 4, 1, 2);
                         StartPointAvailable[4] = true;
                         break;
+                    case BLOCKTYPE_PLAYER6 :
+                        m_pDisplay->DrawSprite (MINI_ARENA_POSITION_X + X * MINI_ARENA_TILE_SIZE + TILE_POSITION_TO_BOMBER_POSITION,
+                                                MINI_ARENA_POSITION_Y + Y * MINI_ARENA_TILE_SIZE + TILE_POSITION_TO_BOMBER_POSITION,
+                                                NULL, NULL, 57, PLAYER_6 % PLAYER_COLOR_COUNT, 1, 2);
+                        StartPointAvailable[PLAYER_6] = true;
+                        break;
+                    case BLOCKTYPE_PLAYER7 :
+                        m_pDisplay->DrawSprite (MINI_ARENA_POSITION_X + X * MINI_ARENA_TILE_SIZE + TILE_POSITION_TO_BOMBER_POSITION,
+                                                MINI_ARENA_POSITION_Y + Y * MINI_ARENA_TILE_SIZE + TILE_POSITION_TO_BOMBER_POSITION,
+                                                NULL, NULL, 57, PLAYER_7 % PLAYER_COLOR_COUNT, 1, 2);
+                        StartPointAvailable[PLAYER_7] = true;
+                        break;
+                    case BLOCKTYPE_PLAYER8 :
+                        m_pDisplay->DrawSprite (MINI_ARENA_POSITION_X + X * MINI_ARENA_TILE_SIZE + TILE_POSITION_TO_BOMBER_POSITION,
+                                                MINI_ARENA_POSITION_Y + Y * MINI_ARENA_TILE_SIZE + TILE_POSITION_TO_BOMBER_POSITION,
+                                                NULL, NULL, 57, PLAYER_8 % PLAYER_COLOR_COUNT, 1, 2);
+                        StartPointAvailable[PLAYER_8] = true;
+                        break;
                     default :
                         break;
                 }
@@ -318,7 +336,7 @@ void CMenuLevel::OnDisplay (void)
             }
             m_pDisplay->DrawSprite (VIEW_WIDTH - MINI_ARENA_POSITION_X - (MAX_PLAYERS - Player) * (MINI_ARENA_TILE_SIZE - TILE_POSITION_TO_BOMBER_POSITION * 2) + TILE_POSITION_TO_BOMBER_POSITION,
                                     WARNING_TEXT_POSITION_Y + TILE_POSITION_TO_BOMBER_POSITION,
-                                    NULL, NULL, 57, Player, 1, 2);
+                                    NULL, NULL, 57, Player % PLAYER_COLOR_COUNT, 1, 2);
         }
     }
 }

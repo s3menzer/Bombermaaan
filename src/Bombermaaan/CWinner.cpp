@@ -592,7 +592,7 @@ void CWinner::Display (void)
             {
                 // Determine the bomber sprite. It depends on the bomber color and on its happiness.
                 // The bomber is happy if he just won the match.
-                int BomberSprite = Player * BOMBER_SPRITES_COUNT_PER_COLOR      // Determines the color
+                int BomberSprite = (Player % PLAYER_COLOR_COUNT) * BOMBER_SPRITES_COUNT_PER_COLOR // Determines the color
                                  + (m_pMatch->GetWinnerPlayer() == Player ?     // Determines happiness
                                        m_HappyBomberSpriteOffset : m_SadBomberSpriteOffset);
 
@@ -636,7 +636,7 @@ void CWinner::Display (void)
                                         NULL,                            // Draw entire sprite
                                         NULL,                            // No need to clip
                                         WINNER_CROSS_SPRITETABLE, 
-                                        Player,       // Appropriate color
+                                        Player % PLAYER_COLOR_COUNT,       // Appropriate color
                                         WINNER_SPRITE_LAYER, 
                                         WINNER_CROSS_PRIORITY);
             }

@@ -112,9 +112,8 @@ void CMatch::Create (void)
         m_pOptions->SetTimeStart(2, 0);
         m_pOptions->SetTimeUp(0, 35);
         
-        m_pOptions->SetBomberType(2, BOMBERTYPE_OFF);
-        m_pOptions->SetBomberType(3, BOMBERTYPE_OFF);
-        m_pOptions->SetBomberType(4, BOMBERTYPE_OFF);
+        for (int Player = 2; Player < MAX_PLAYERS; Player++)
+            m_pOptions->SetBomberType(Player, BOMBERTYPE_OFF);
         m_pOptions->SetBattleCount(3);
 
         if (NetworkMode == NETWORKMODE_SERVER)

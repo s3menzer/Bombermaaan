@@ -268,7 +268,7 @@ void CMenuInput::OnDisplay (void)
                                     NULL,
                                     NULL,
                                     BOMBER_HEAD_SPRITE_TABLE,
-                                    Player,
+                                    Player % PLAYER_COLOR_COUNT,
                                     MENUINPUT_SPRITELAYER,
                                     BOMBER_HEAD_PRIORITY);
 

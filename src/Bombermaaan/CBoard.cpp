@@ -431,7 +431,7 @@ void CBoard::Display (void)
                                     NULL,                            // Draw entire sprite
                                     NULL,                            // No need to clip
                                     BOARD_HEADS_SPRITETABLE, 
-                                    DeadHeadOffset + Player, 
+                                    DeadHeadOffset + (Player % PLAYER_COLOR_COUNT),
                                     BOARD_SPRITELAYER,
                                     BOARD_OBJECTS_PRIORITY);
     

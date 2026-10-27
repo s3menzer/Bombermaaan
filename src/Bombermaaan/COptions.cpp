@@ -50,10 +50,11 @@
 #define CONFIGURATION_KEYBOARD_4      3
 #define CONFIGURATION_KEYBOARD_5      4
 #define CONFIGURATION_JOYSTICK_1      5
+#define LEGACY_MAX_PLAYERS            5
 #define LEGACY_MAX_PLAYER_INPUT       10
 
 #ifdef BOMBERMAAAN_SWITCH
-#define CONFIGURATION_REVISION        6
+#define CONFIGURATION_REVISION        7
 #else
 #define CONFIGURATION_REVISION        1
 #endif
@@ -185,25 +186,29 @@ void COptions::SetDefaultValues(void)
     // Default display mode is windowed, not full-screen
     m_DisplayMode = DISPLAYMODE_WINDOWED;
 
-    // Set the bomber types
+    // Set the bomber types and initialise player inputs.
+    // Keep the additional player slots disabled by default until the user
+    // enables them in the bomber menu.
+    for (int i = 0 ; i < MAX_PLAYERS ; i++)
+    {
+        m_BomberType[i] = BOMBERTYPE_OFF;
+        m_PlayerInput[i] = CONFIGURATION_KEYBOARD_1 + i;
+    }
+
     m_BomberType[0] = BOMBERTYPE_MAN;
     m_BomberType[1] = BOMBERTYPE_MAN;
-    m_BomberType[2] = BOMBERTYPE_OFF;
-    m_BomberType[3] = BOMBERTYPE_OFF;
-    m_BomberType[4] = BOMBERTYPE_OFF;
-
-    // Initialise player inputs
-    for (int i = 0 ; i < MAX_PLAYERS ; i++)
-        m_PlayerInput[i] = CONFIGURATION_KEYBOARD_1 + i;
 
 #ifdef BOMBERMAAAN_SWITCH
-    // Expose the first four native Switch controller slots as the first four
-    // players.  The desktop build keeps its original keyboard defaults.
-    for (int Player = 0; Player < 4; Player++)
+    // Expose all native Switch controller slots as the corresponding players.
+    // The desktop build keeps its original keyboard defaults.
+    for (int Player = 0; Player < MAX_PLAYERS; Player++)
     {
-        m_BomberType[Player] = BOMBERTYPE_MAN;
         m_PlayerInput[Player] = CONFIGURATION_JOYSTICK_1 + Player;
     }
+    m_BomberType[0] = BOMBERTYPE_MAN;
+    m_BomberType[1] = BOMBERTYPE_MAN;
+    m_BomberType[2] = BOMBERTYPE_MAN;
+    m_BomberType[3] = BOMBERTYPE_MAN;
 #endif
 
     // Set default keyboard keys and joystick buttons
@@ -290,8 +295,10 @@ bool COptions::LoadConfiguration (void)
         fread(&m_TimeStartSeconds, sizeof(int), 1, pConfigFile);
         fread(&m_DisplayMode, sizeof(EDisplayMode), 1, pConfigFile);
         fread(&m_BattleCount, sizeof(int), 1, pConfigFile);
-        fread(m_BomberType, sizeof(EBomberType), MAX_PLAYERS, pConfigFile);
-        fread(m_PlayerInput, sizeof(int), MAX_PLAYERS, pConfigFile);
+        // The old binary format contained five player slots. Read only that
+        // portion so the newly added player slots retain their defaults.
+        fread(m_BomberType, sizeof(EBomberType), LEGACY_MAX_PLAYERS, pConfigFile);
+        fread(m_PlayerInput, sizeof(int), LEGACY_MAX_PLAYERS, pConfigFile);
         // The binary format always contained five keyboard and five joystick
         // configurations. Do not use the larger current Switch count here.
         fread(m_Control, sizeof(int),
@@ -400,14 +407,16 @@ bool COptions::LoadConfiguration (void)
 #ifdef BOMBERMAAAN_SWITCH
     if (switchPlayerDefaultsNeedMigration)
     {
-        m_BomberType[0] = BOMBERTYPE_MAN;
-        m_BomberType[1] = BOMBERTYPE_MAN;
-        m_BomberType[2] = BOMBERTYPE_MAN;
-        m_BomberType[3] = BOMBERTYPE_MAN;
-        m_BomberType[4] = BOMBERTYPE_OFF;
+        for (int Player = 0; Player < MAX_PLAYERS; Player++)
+            m_BomberType[Player] = BOMBERTYPE_OFF;
+
+        for (int Player = 0; Player < MAX_PLAYERS; Player++)
+            m_PlayerInput[Player] = CONFIGURATION_JOYSTICK_1 + Player;
 
         for (int Player = 0; Player < 4; Player++)
-            m_PlayerInput[Player] = CONFIGURATION_JOYSTICK_1 + Player;
+        {
+            m_BomberType[Player] = BOMBERTYPE_MAN;
+        }
     }
 #endif
 
