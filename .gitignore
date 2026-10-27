@@ -11,3 +11,5 @@ src/RES32/Debug
 src/RES32/Release
 src/third-party/SDL
 src/third-party/SDL_mixer
+src/_Test_/Debug
+src/_Test_/Release

@@ -5,6 +5,17 @@ Changed: Parameter --use-appdata-dir replaced by --ignore-home-dir on Linux. On 
 New feature: Game can be paused/unpaused with the "start" button of the joysticks (#2907122)
 
 
+
+----------------------------
+
+
+Version 1.4.1
+
+Released on February 25, 2024
+
+New feature: Full Screen with game mode 5: 640x480x32
+
+
 ----------------------------
 
 

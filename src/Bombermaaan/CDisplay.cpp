@@ -58,14 +58,14 @@ CDisplay::~CDisplay (void)
 //******************************************************************************************************************************
 //******************************************************************************************************************************
 
-bool CDisplay::Create (int Width, int Height, bool FullScreen)
+bool CDisplay::Create (int Width, int Height, int Depth, bool FullScreen)
 {
     // Check if we have a connection with the resources
 #ifdef WIN32
     ASSERT (m_hModule != NULL);
 #endif
     
-    int Depth = (FullScreen ? 16 : 0);
+    //int Depth = (FullScreen ? 16 : 0);
 	
     // If no display mode has been set yet or the current display mode is not the right one
 #ifdef WIN32
@@ -253,10 +253,11 @@ bool CDisplay::Create (EDisplayMode DisplayMode)
     // According to the new display mode to set
     switch (DisplayMode)
     {
-        case DISPLAYMODE_FULL1    : return Create (320, 240, true);
-        case DISPLAYMODE_FULL2    : return Create (512, 384, true);
-        case DISPLAYMODE_FULL3    : return Create (640, 480, true);
-        case DISPLAYMODE_WINDOWED : return Create (VIEW_WIDTH, VIEW_HEIGHT, false);
+        case DISPLAYMODE_FULL1    : return Create (320, 240, 16, true);
+        case DISPLAYMODE_FULL2    : return Create (512, 384, 16, true);
+        case DISPLAYMODE_FULL3    : return Create (640, 480, 16, true);
+        case DISPLAYMODE_WINDOWED : return Create (VIEW_WIDTH, VIEW_HEIGHT, 0, false);
+        case DISPLAYMODE_FULL4    : return Create (640, 480, 32, true);
         default                   : return false; // Should never happen
     }
 }
@@ -290,6 +291,7 @@ bool CDisplay::IsDisplayModeAvailable (EDisplayMode DisplayMode)
         case DISPLAYMODE_FULL1    : return m_DirectDraw.IsModeAvailable (320, 240, 16);
         case DISPLAYMODE_FULL2    : return m_DirectDraw.IsModeAvailable (512, 384, 16);
         case DISPLAYMODE_FULL3    : return m_DirectDraw.IsModeAvailable (640, 480, 16);
+        case DISPLAYMODE_FULL4    : return m_DirectDraw.IsModeAvailable (640, 480, 32);
 #else
         case DISPLAYMODE_FULL1    : return m_SDLVideo.IsModeAvailable (320, 240, 16);
         case DISPLAYMODE_FULL2    : return m_SDLVideo.IsModeAvailable (512, 384, 16);
