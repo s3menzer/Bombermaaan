@@ -74,7 +74,7 @@ CXXFLAGS := ${CXXFLAGS} ${DEFS}
 # Targets of the build
 #****************************************************************************
 
-.PHONY: xml
+.PHONY: xml install uninstall
 
 all: xml
 
@@ -95,6 +95,14 @@ OBJS := $(addsuffix .o,$(basename ${SRCS}))
 #****************************************************************************
 
 xml: ${OBJS}
+
+# TinyXML is linked directly into Bombermaaan; there is no separate runtime
+# artifact to install.
+install:
+	@:
+
+uninstall:
+	@:
 
 #****************************************************************************
 # common rules

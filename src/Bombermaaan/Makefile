@@ -12,9 +12,17 @@ OBJ  = CBoard.o CClock.o CCloudManager.o CCommandChunk.o CControls.o CDemo.o CDr
 SRC  = $(OBJ:%.o=%.cpp) STDAFX.CPP
 LINKOBJ = $(OBJ) STDAFX.o $(TINYXML_PATH)/tinystr.o $(TINYXML_PATH)/tinyxmlerror.o $(TINYXML_PATH)/tinyxml.o $(TINYXML_PATH)/tinyxmlparser.o
 LIBS = -L../RESGEN $(SDL_LDFLAGS) -lbombermaaan
-CXXINCS =  -I./ -I$(TINYXML_PATH)
+CXXINCS = -I./ \
+          -I$(TINYXML_PATH) \
+          -I../third-party/DXSDK_Aug2007/Include \
+          -I../third-party/SDL_mixer-1.2.12/include \
+          -I../third-party/SDL-1.2-release-1.2.15/include
 BIN  = Bombermaaan
 STRIP = strip
+INSTALL = install
+RSYNC = rsync
+LEVELS_SOURCE = ../debian/usr/share/games/bombermaaan/Levels/
+LEVELS_DEST = $(prefix)/share/games/bombermaaan/Levels/
 CXXFLAGS = $(CXXINCS) $(SDL_CFLAGS) -Wall -O2
 ifeq ($(DEBUG),1)
 	CXXFLAGS += -g
@@ -35,11 +43,12 @@ clean: clean-custom
 	$(RM) $(LINKOBJ) $(BIN) $(DEPENDFILE) *~
 
 install: all
-	mkdir -p $(prefix)/bin
-	$(INSTALL) $(BIN) $(prefix)/bin
+	mkdir -p "$(prefix)/bin" "$(LEVELS_DEST)"
+	$(INSTALL) -m 755 "$(BIN)" "$(prefix)/bin/$(BIN)"
+	$(RSYNC) -a "$(LEVELS_SOURCE)" "$(LEVELS_DEST)"
 
 uninstall: all
-	$(RM) $(prefix)/bin/$(BIN)
+	$(RM) "$(prefix)/bin/$(BIN)"
 
 strip: $(BIN)
 	$(STRIP) $(BIN)
@@ -52,4 +61,3 @@ STDAFX.o: STDAFX.CPP
 
 %.o: %.cpp
 	$(CPP) -c $< -o $@ $(CXXFLAGS)
-

@@ -7,6 +7,10 @@ SHELL=/bin/sh
 
 
 prefix?=/usr/local
+# Normalize the prefix before recursive makes change directory.  This also
+# makes relative prefixes such as ./_Test_/Linux work from every subdirectory.
+override prefix := $(abspath $(prefix))
+export prefix
 exec_prefix=${prefix}
 subdirs=third-party RESGEN Bombermaaan
 DPKG=dpkg-deb -b
@@ -47,13 +51,13 @@ all:
 install:
 	@for i in ${subdirs}; do \
 		echo Installing in $$i ; \
-		(cd $$i; ${MAKE} install) \
+		(cd $$i && ${MAKE} prefix="$(prefix)" install) || exit $$?; \
 	done
 
 uninstall:
 	@for i in ${subdirs}; do \
 		echo Uninstalling in $$i ; \
-		(cd $$i; ${MAKE} uninstall) \
+		(cd $$i && ${MAKE} prefix="$(prefix)" uninstall) || exit $$?; \
 	done
 
 depend:
@@ -98,4 +102,3 @@ clean:
 
 distclean: clean
 	$(RM) .tm_project2.cache
-
