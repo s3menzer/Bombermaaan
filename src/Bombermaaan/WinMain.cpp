@@ -30,74 +30,47 @@
 
 #ifdef BOMBERMAAAN_SWITCH
 #include <switch.h>
-#include "updater.hpp"
-#include "version.hpp"
-#include <cstdio>
+#include <string>
+#include <unistd.h>
 
 namespace
 {
-    void showUpdateProgress(const char* message, void*)
+    std::string directoryOf(const char* path)
     {
-        if (message == NULL)
-            return;
+        if (path == NULL || path[0] == '\0')
+            return ".";
 
-        std::printf("%s\n", message);
-        consoleUpdate(NULL);
+        const std::string value(path);
+        const std::string::size_type slash = value.find_last_of("/\\");
+        if (slash == std::string::npos)
+            return ".";
+        if (slash == 0)
+            return "/";
+        return value.substr(0, slash);
     }
 
-    void waitForButton()
+    bool restoreWorkingDirectory(int argc, char** argv)
     {
-        // Accept input from all eight controller slots, split Joy-Cons, and
-        // handheld mode.
-        padConfigureInput(8, HidNpadStyleSet_NpadStandard);
-        PadState pad;
-        padInitialize(&pad,
-                      HidNpadIdType_No1,
-                      HidNpadIdType_No2,
-                      HidNpadIdType_No3,
-                      HidNpadIdType_No4,
-                      HidNpadIdType_No5,
-                      HidNpadIdType_No6,
-                      HidNpadIdType_No7,
-                      HidNpadIdType_No8,
-                      HidNpadIdType_Handheld);
-
-        // Do not treat the button used to launch the application as the
-        // confirmation press.
-        padUpdate(&pad);
-        while (appletMainLoop() && padGetButtons(&pad) != 0)
+        // hbloader passes the selected NRO as argv[1].  The launcher uses
+        // that argument to pass the absolute game.nro path to this process,
+        // so prefer it over argv[0], which may identify hbmenu instead.
+        const char* executablePath = NULL;
+        if (argc > 1 && argv != NULL && argv[1] != NULL &&
+            argv[1][0] != '\0')
         {
-            consoleUpdate(NULL);
-            svcSleepThread(10 * 1000 * 1000);
-            padUpdate(&pad);
+            executablePath = argv[1];
+        }
+        else if (argc > 0 && argv != NULL && argv[0] != NULL &&
+                 argv[0][0] != '\0')
+        {
+            executablePath = argv[0];
         }
 
-        while (appletMainLoop())
-        {
-            padUpdate(&pad);
-            if (padGetButtonsDown(&pad) != 0)
-                break;
+        if (executablePath == NULL)
+            return false;
 
-            consoleUpdate(NULL);
-            svcSleepThread(10 * 1000 * 1000);
-        }
-    }
-
-    void showUpdateComplete()
-    {
-        std::printf(
-            "\nUpdate installed successfully.\n"
-            "Please restart Bombermaaan to use the new version.\n"
-            "Press any button to close the application.\n");
-        consoleUpdate(NULL);
-        waitForButton();
-    }
-
-    void showStartPrompt()
-    {
-        std::printf("\nPress any button to start the game.\n");
-        consoleUpdate(NULL);
-        waitForButton();
+        const std::string directory = directoryOf(executablePath);
+        return directory == "." || chdir(directory.c_str()) == 0;
     }
 }
 #endif
@@ -126,48 +99,8 @@ int main (int argc, char **argv)
 #endif
 {
 #ifdef BOMBERMAAAN_SWITCH
-    updater::Config updateConfig;
-    updateConfig.applicationName = "Bombermaaan";
-    updateConfig.configFileBaseName = "bombermaaan";
-    updateConfig.currentVersion = BOMBERMAAAN_VERSION_STRING;
-    updateConfig.currentBuild = BOMBERMAAAN_BUILD_NUMBER;
-    updateConfig.defaultManifestUrl = BOMBERMAAAN_DEFAULT_MANIFEST_URL;
-    updateConfig.executablePath =
-        (argc > 0 && argv != NULL && argv[0] != NULL) ? argv[0] : "";
-    updateConfig.targetPath = "sdmc:/switch/Bombermaaan.nro";
-    updateConfig.platform = "switch";
-
-    PrintConsole* updateConsole = consoleInit(NULL);
-    if (updateConsole != NULL)
-    {
-        std::printf("Bombermaaan update\n\n");
-        consoleUpdate(updateConsole);
-        updateConfig.progressCallback = showUpdateProgress;
-        updateConfig.progressUserData = updateConsole;
-    }
-
-    // The updater mounts the SD card itself and runs before ROMFS/SDL
-    // initialization, just like the Cross//Roads implementation.
-    const updater::Result updateResult = updater::run(updateConfig);
-
-    if (updateConsole != NULL)
-    {
-        if (updateResult == updater::Result::Updated)
-            showUpdateComplete();
-        else
-            showStartPrompt();
-
-        consoleExit(updateConsole);
-        updateConfig.progressCallback = NULL;
-        updateConfig.progressUserData = NULL;
-    }
-
-    // The running process contains the old executable.  Do not start the
-    // game after replacing the NRO; close now so the next launch uses the
-    // newly installed version.
-    if (updateResult == updater::Result::Updated)
-        return 0;
-
+    fsdevMountSdmc();
+    restoreWorkingDirectory(argc, argv);
     if (romfsInit() != 0)
         return false;
 #endif

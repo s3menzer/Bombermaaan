@@ -51,6 +51,29 @@ for tool in make elf2nro nacptool; do
 done
 
 VERSION_FILE="../Bombermaaan/version.hpp"
+UPDATER_MANIFEST_SCRIPT="../updater/scripts/create_manifest.py"
+UPDATER_JSON_SOURCE="../updater/third_party/json-parser/json.c"
+
+if [[ "${1:-}" != "clean" ]]; then
+    if [[ ! -f "$UPDATER_MANIFEST_SCRIPT" ||
+          ! -f "$UPDATER_JSON_SOURCE" ]]; then
+        cat >&2 <<EOF
+The updater submodule (including its nested JSON parser) is not initialized.
+Run:
+
+  git submodule update --init --recursive
+
+Then build again.
+EOF
+        exit 4
+    fi
+
+    if ! command -v python3 >/dev/null 2>&1; then
+        echo "Required manifest tool not found: python3" >&2
+        exit 4
+    fi
+fi
+
 # Set AUTO_BUILD_NUMBER=0 for a reproducible rebuild without incrementing the
 # numeric build stored in the version header.
 AUTO_BUILD_NUMBER="${AUTO_BUILD_NUMBER:-1}"
@@ -92,39 +115,32 @@ else
     exit "$BUILD_STATUS"
 fi
 
-# Keep the manifest beside the NRO.  Upload the NRO before the manifest so a
+# Keep the manifest beside both NROs. Upload both NROs before the manifest so a
 # client never observes metadata for an artifact that is not available yet.
-if [[ -f Bombermaaan.nro ]]; then
+if [[ -f Bombermaaan.nro && -f game.nro ]]; then
     VERSION="$(sed -n 's/^#define BOMBERMAAAN_VERSION_STRING[[:space:]]*"\(.*\)"/\1/p' ../Bombermaaan/version.hpp)"
     BUILD_NUMBER="$(sed -n 's/^#define BOMBERMAAAN_BUILD_NUMBER[[:space:]]*\([0-9][0-9]*\)$/\1/p' ../Bombermaaan/version.hpp)"
     VERSION="${VERSION:-0.0.0}"
     BUILD_NUMBER="${BUILD_NUMBER:-0}"
-    MANIFEST_URL="${BOMBERMAAAN_MANIFEST_URL:-http://192.168.22.7/switch/bombermaaan.json}"
-    DOWNLOAD_URL="${BOMBERMAAAN_DOWNLOAD_URL:-http://192.168.22.7/switch/Bombermaaan.nro}"
+    MANIFEST_URL="${BOMBERMAAAN_MANIFEST_URL:-http://192.168.22.7/switch/Bombermaaan/Bombermaaan.json}"
+    LAUNCHER_DOWNLOAD_URL="${BOMBERMAAAN_DOWNLOAD_URL:-http://192.168.22.7/switch/Bombermaaan/Bombermaaan.nro}"
+    GAME_DOWNLOAD_URL="${BOMBERMAAAN_GAME_DOWNLOAD_URL:-http://192.168.22.7/switch/Bombermaaan/game.nro}"
 
-    if command -v sha256sum >/dev/null 2>&1; then
-        SHA256="$(sha256sum Bombermaaan.nro | awk '{print $1}')"
-    elif command -v shasum >/dev/null 2>&1; then
-        SHA256="$(shasum -a 256 Bombermaaan.nro | awk '{print $1}')"
-    else
-        echo "sha256sum or shasum was not found." >&2
-        exit 3
-    fi
-
-    cat > Bombermaaan.json <<EOF
-{
-  "name": "Bombermaaan",
-  "platform": "switch",
-  "version": "${VERSION}",
-  "build": ${BUILD_NUMBER},
-  "download": "${DOWNLOAD_URL}",
-  "sha256": "${SHA256}"
-}
-EOF
+    python3 "$UPDATER_MANIFEST_SCRIPT" \
+        --output Bombermaaan.json \
+        --name Bombermaaan \
+        --platform switch \
+        --version "$VERSION" \
+        --build "$BUILD_NUMBER" \
+        --file game.nro "$GAME_DOWNLOAD_URL" game.nro \
+        --file Bombermaaan.nro "$LAUNCHER_DOWNLOAD_URL" Bombermaaan.nro
 
     echo "Generated update manifest:"
     echo "  ${PWD}/Bombermaaan.json"
     echo "  manifest URL: ${MANIFEST_URL}"
+elif [[ "${1:-}" != "clean" ]]; then
+    echo "Build completed without both required NROs (Bombermaaan.nro and game.nro)." >&2
+    exit 3
 elif [[ "${1:-}" == "clean" ]]; then
     rm -f Bombermaaan.json
 fi
