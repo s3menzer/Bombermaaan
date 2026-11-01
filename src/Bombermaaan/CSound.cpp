@@ -286,7 +286,11 @@ bool CSound::LoadSong (ESong Song, int ResourceID)
 #endif
   
     // Open Sample
+#ifdef BOMBERMAAAN_SWITCH
     m_CurrentSong = Mix_LoadMUS_RW(rwSong, 0);
+#else
+    m_CurrentSong = Mix_LoadMUS_RW(rwSong);
+#endif
 #ifdef BOMBERMAAAN_SWITCH
     SDL2_FreeRW(rwSong);
 #else

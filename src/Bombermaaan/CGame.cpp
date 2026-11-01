@@ -530,7 +530,9 @@ bool CGame::Create (char **pCommandLine, int pCommandLineCount)
     // SDL2's Switch backend enumerates the configured Npad slots during
     // initialization. Configure them before SDL starts so its logical
     // SDL_GameController devices include detached Joy-Cons.
+#ifdef BOMBERMAAAN_SWITCH
     padConfigureInput(8, HidNpadStyleSet_NpadStandard);
+#endif
     if ((SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_JOYSTICK) == -1))
 #endif
     { 

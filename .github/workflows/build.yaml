@@ -92,36 +92,54 @@ jobs:
       - name: Install MinGW and SDL dependencies
         uses: msys2/setup-msys2@v2
         with:
-          msystem: MINGW32
+          msystem: MINGW64
           update: true
           install: >-
             make
             zip
-            mingw-w64-i686-toolchain
-            mingw-w64-i686-SDL
-            mingw-w64-i686-SDL_mixer
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-SDL
+            mingw-w64-x86_64-SDL_mixer
 
       - name: Build and package Windows
         shell: msys2 {0}
         run: |
           set -euo pipefail
           make -C src/RES -f Makefile.win CROSS=1 \
-            CPP=i686-w64-mingw32-g++ CC=i686-w64-mingw32-gcc \
-            WINDRES=i686-w64-mingw32-windres
+            CPP=x86_64-w64-mingw32-g++ CC=x86_64-w64-mingw32-gcc \
+            WINDRES=x86_64-w64-mingw32-windres
           make -C src/RES32 -f Makefile.win CROSS=1 \
-            CPP=i686-w64-mingw32-g++ CC=i686-w64-mingw32-gcc \
-            WINDRES=i686-w64-mingw32-windres
+            CPP=x86_64-w64-mingw32-g++ CC=x86_64-w64-mingw32-gcc \
+            WINDRES=x86_64-w64-mingw32-windres
           make -C src/Bombermaaan -f Makefile.win CROSS=1 \
-            CPP=i686-w64-mingw32-g++ CC=i686-w64-mingw32-gcc \
-            WINDRES=i686-w64-mingw32-windres \
-            SDL_CONFIG=/mingw32/bin/sdl-config
+            CPP=x86_64-w64-mingw32-g++ CC=x86_64-w64-mingw32-gcc \
+            WINDRES=x86_64-w64-mingw32-windres \
+            SDL_CONFIG=/mingw64/bin/sdl-config
 
           package="Bombermaaan-windows"
           rm -rf "$package"
           cp -a src/_Test_/Bombermaaan_1.4.1.628_20240225_win32_menzer "$package"
           cp src/Bombermaaan/Bombermaaan_32.exe "$package/Bombermaaan.exe"
+          rm -f "$package"/*.dll
           cp src/RES/Bombermaaan.dll "$package/"
           cp src/RES32/Bombermaaan_32.dll "$package/"
+          # Collect the MinGW runtime and SDL DLLs required by the newly
+          # built 64-bit executable and resource libraries.
+          queue=("Bombermaaan.exe" "Bombermaaan.dll" "Bombermaaan_32.dll")
+          declare -A seen=()
+          while ((${#queue[@]})); do
+            file="${queue[0]}"
+            queue=("${queue[@]:1}")
+            while read -r dependency; do
+              [[ -n "$dependency" && -f "$dependency" ]] || continue
+              name="$(basename "$dependency")"
+              [[ -n "${seen[$name]:-}" ]] && continue
+              seen["$name"]=1
+              cp "$dependency" "$package/$name"
+              queue+=("$name")
+            done < <(ldd "$package/$file" 2>/dev/null |
+              sed -n 's/.*=> \(\/mingw64\/bin\/[^ ]*\.dll\).*/\1/p')
+          done
           zip -qr Bombermaaan-windows.zip "$package"
 
       - name: Upload Windows artifact
@@ -161,7 +179,7 @@ jobs:
         run: |
           set -euo pipefail
           CONTAINER_USE_HOST_USER=1 \
-            src/native-switch/docker-build.sh
+            bash src/native-switch/docker-build.sh
 
       - name: Collect Switch artifacts
         shell: bash
