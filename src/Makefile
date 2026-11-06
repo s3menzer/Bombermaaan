@@ -39,6 +39,8 @@ RM=rm -f
 LN=ln -sf
 SED=sed
 STRIP=strip
+LEVELS_SOURCE=../levels/
+LEVELS_DEST=debian/usr/share/games/bombermaaan/Levels/
 
 CFLAGS = -O2
 
@@ -72,6 +74,9 @@ debian: debian.deb debian-data.deb
 debian.deb: $(BIN)
 	$(CP) $(BIN) debian/usr/games/$(BINFILENAME)
 	$(STRIP) debian/usr/games/$(BINFILENAME)
+	mkdir -p "$(LEVELS_DEST)"
+	$(RM) "$(LEVELS_DEST)"*.TXT
+	$(CP) "$(LEVELS_SOURCE)"*.TXT "$(LEVELS_DEST)"
 	$(SED) -e 's/ARCHITECTURE/$(PLATFORM)/' debian/DEBIAN/control.dist > debian/DEBIAN/control
 	$(CP) CHANGELOG.txt debian/usr/share/doc/bombermaaan/
 	$(CHMOD) 755 debian/DEBIAN/post*

@@ -48,7 +48,7 @@ build_windows() {
   local package="$BUILD_DIR/Bombermaaan-windows"
   rm -rf "$package"
   mkdir -p "$package/Levels"
-  cp src/debian/usr/share/games/bombermaaan/Levels/*.TXT "$package/Levels/"
+  cp levels/*.TXT "$package/Levels/"
   cp src/debian/usr/share/doc/bombermaaan/Readme.html "$package/"
   cp COPYING.txt "$package/"
   cp src/CHANGELOG.txt "$package/"

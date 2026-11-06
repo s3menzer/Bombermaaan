@@ -88,7 +88,7 @@ names at the moment. I'll add them as soon as I know.
 - You should be able to compile Bombermaaan now<br>
   Change to the new directory and type <kbd>make</kbd>
 
-- Ensure you have some level files in the ./Bombermaaan/Levels directory
+- Ensure you have some level files in the ./levels directory
 
 - Change to directory ./Bombermaaan and type <kbd>LD_LIBRARY_PATH=../RESGEN ./Bombermaaan</kbd>
 

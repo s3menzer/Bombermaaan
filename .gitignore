@@ -25,6 +25,8 @@ src/third-party/SDL_mixer
 /build-linux
 /build-windows
 /build-switch
+/src/native-switch/romfs/.levels.stamp
+/src/native-switch/romfs/Levels
 /docker-build-windows.log
 /src/Bombermaaan/Bombermaaan_32.exe
 /src/RES32/Bombermaaan_32.dll

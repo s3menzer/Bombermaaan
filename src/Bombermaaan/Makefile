@@ -21,7 +21,7 @@ BIN  = Bombermaaan
 STRIP = strip
 INSTALL = install
 RSYNC = rsync
-LEVELS_SOURCE = ../debian/usr/share/games/bombermaaan/Levels/
+LEVELS_SOURCE = ../../levels/
 LEVELS_DEST = $(prefix)/share/games/bombermaaan/Levels/
 CXXFLAGS = $(CXXINCS) $(SDL_CFLAGS) -Wall -O2
 ifeq ($(DEBUG),1)

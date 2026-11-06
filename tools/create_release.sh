@@ -175,7 +175,7 @@ echo Creating $RELEASETYPE binary release package folder for version $VERSION, r
 mkdir "$TARGETDIR"                                                              || error "Mkdir ended with return code $?."
 
 mkdir "$TARGETDIR/Levels"                                                       || error "Mkdir ended with return code $?."
-cp ../../src/debian/usr/share/games/bombermaaan/Levels/L*.TXT "$TARGETDIR/Levels/." || error "Copy ended with return code $?."
+cp ../../levels/L*.TXT "$TARGETDIR/Levels/." || error "Copy ended with return code $?."
 
 if [ "$SYSTEM" = "Linux" ] ; then
     cp ../../src/Bombermaaan/Bombermaaan        "$TARGETDIR/."                  || error "Copy ended with return code $?."

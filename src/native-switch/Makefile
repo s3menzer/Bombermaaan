@@ -22,6 +22,9 @@ BUILD_ROOT := $(TOPDIR)/build
 GAME_BUILD := $(BUILD_ROOT)/game
 LAUNCHER_BUILD := $(BUILD_ROOT)/launcher
 ROMFS := $(TOPDIR)/romfs
+LEVELS_SOURCE := $(TOPDIR)/../../levels
+LEVEL_FILES := $(wildcard $(LEVELS_SOURCE)/*.TXT)
+LEVELS_STAMP := $(ROMFS)/.levels.stamp
 APP_ICON := $(TOPDIR)/Bombermaaan-icon.jpg
 VERSION_HEADER := $(TOPDIR)/../Bombermaaan/version.hpp
 
@@ -113,12 +116,17 @@ $(LAUNCHER_NRO): $(LAUNCHER_ELF) $(NACP) $(APP_ICON)
 		--icon="$(APP_ICON)" \
 		--nacp="$(NACP)"
 
-$(GAME_NRO): $(GAME_ELF) $(NACP) $(APP_ICON) $(ROMFS)
+$(GAME_NRO): $(GAME_ELF) $(NACP) $(APP_ICON) $(ROMFS) $(LEVELS_STAMP)
 	@echo creating $(notdir $@)
 	@elf2nro "$(GAME_ELF)" "$@" \
 		--icon="$(APP_ICON)" \
 		--nacp="$(NACP)" \
 		--romfsdir="$(ROMFS)"
+
+$(LEVELS_STAMP): $(LEVEL_FILES)
+	@mkdir -p "$(ROMFS)/Levels"
+	@cp $(LEVEL_FILES) "$(ROMFS)/Levels/"
+	@touch "$@"
 
 $(LAUNCHER_ELF): $(LAUNCHER_OBJECTS)
 	@echo linking $(notdir $@)
@@ -159,7 +167,7 @@ clean:
 	@rm -rf "$(BUILD_ROOT)" \
 		"$(GAME_ELF)" "$(GAME_NRO)" \
 		"$(LAUNCHER_ELF)" "$(LAUNCHER_NRO)" \
-		"$(NACP)" \
+		"$(NACP)" "$(LEVELS_STAMP)" "$(ROMFS)/Levels/"*.TXT \
 		"$(TOPDIR)/game.lst" "$(TOPDIR)/Bombermaaan.lst"
 
 -include $(GAME_OBJECTS:.o=.d) $(LAUNCHER_OBJECTS:.o=.d)

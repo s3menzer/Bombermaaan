@@ -37,7 +37,7 @@ build_linux() {
   ln -s libbombermaaan.so.1.0.0 "$package/lib/libbombermaaan.so.1"
   ln -s libbombermaaan.so.1.0.0 "$package/lib/libbombermaaan.so"
 
-  local levels_dir="$PROJECT_ROOT/src/debian/usr/share/games/bombermaaan/Levels"
+  local levels_dir="$PROJECT_ROOT/levels"
   find "$levels_dir" -maxdepth 1 -type f -iname '*.txt' \
     -exec cp {} "$package/Levels/" \;
   find "$package/Levels" -maxdepth 1 -type f \
