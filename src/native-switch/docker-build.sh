@@ -4,6 +4,7 @@ set -euo pipefail
 # Build Bombermaaan for Nintendo Switch inside the official devkitPro image.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+LEVELS_ROOT="$(cd "$PROJECT_ROOT/.." && pwd)/levels"
 IMAGE="${DEVKITPRO_DOCKER_IMAGE:-docker.io/devkitpro/devkita64:latest}"
 
 if [[ -n "${CONTAINER_ENGINE:-}" ]]; then
@@ -47,6 +48,7 @@ exec "$ENGINE" run --rm "${TTY_ARGS[@]}" \
     -e LIBNX=/opt/devkitpro/libnx \
     -e PORTLIBS=/opt/devkitpro/portlibs \
     -v "${PROJECT_ROOT}:/workspace${VOLUME_SUFFIX}" \
+    -v "${LEVELS_ROOT}:/workspace/levels:ro${VOLUME_SUFFIX}" \
     -w /workspace/native-switch \
     "$IMAGE" \
     bash -lc \
