@@ -50,6 +50,6 @@ exec "$ENGINE" run --rm "${TTY_ARGS[@]}" \
     -w /workspace/native-switch \
     "$IMAGE" \
     bash -lc \
-    'export PATH="$DEVKITA64/bin:$DEVKITPRO/tools/bin:$DEVKITPRO/portlibs/switch/bin:$PATH"; ./build.sh "$@"' \
+    'export PATH="$DEVKITA64/bin:$DEVKITPRO/tools/bin:$DEVKITPRO/portlibs/switch/bin:$PATH"; bash ./build.sh "$@"' \
     docker-build \
     "$@"

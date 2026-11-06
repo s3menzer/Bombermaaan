@@ -23,4 +23,6 @@ src/_Test_/
 .depend
 
 /src/Bombermaaan/Bombermaaan
-/src_trash
+/build-linux
+/build-windows
+/build-switch
