@@ -51,15 +51,17 @@
 #endif
 
 #ifdef USE_32_PIXELS_PER_BLOCK
-#define MINI_ARENA_POSITION_X   120
+#define MINI_ARENA_POSITION_X   ((VIEW_WIDTH - ARENA_WIDTH * MINI_ARENA_TILE_SIZE) / 2)
 #define MINI_ARENA_POSITION_Y   (73+60)
 #define TILE_POSITION_TO_BOMBER_POSITION    (-4)
 #define MINI_ARENA_TILE_SIZE    16
+#define WARNING_TEXT_POSITION_X ((VIEW_WIDTH - 420) / 2 + 30)
 #else
-#define MINI_ARENA_POSITION_X   59
+#define MINI_ARENA_POSITION_X   ((VIEW_WIDTH - ARENA_WIDTH * MINI_ARENA_TILE_SIZE) / 2)
 #define MINI_ARENA_POSITION_Y   73
 #define TILE_POSITION_TO_BOMBER_POSITION    (-2)
 #define MINI_ARENA_TILE_SIZE    8
+#define WARNING_TEXT_POSITION_X ((VIEW_WIDTH - 210) / 2 + 15)
 #endif
 
 
@@ -331,7 +333,7 @@ void CMenuLevel::OnDisplay (void)
             m_pFont->SetTextColor (FONTCOLOR_RED);
             if (!warningShown)
             {
-                m_pFont->Draw (MINI_ARENA_POSITION_X / 2, WARNING_TEXT_POSITION_Y, "NO START POS:");
+                m_pFont->Draw (WARNING_TEXT_POSITION_X, WARNING_TEXT_POSITION_Y, "NO START POS:");
                 warningShown = true;
             }
             m_pDisplay->DrawSprite (VIEW_WIDTH - MINI_ARENA_POSITION_X - (MAX_PLAYERS - Player) * (MINI_ARENA_TILE_SIZE - TILE_POSITION_TO_BOMBER_POSITION * 2) + TILE_POSITION_TO_BOMBER_POSITION,

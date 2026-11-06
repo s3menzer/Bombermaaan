@@ -114,71 +114,54 @@ void CArenaCloser::Start (void)
 void CArenaCloser::CreateSpiralClosing (void)
 {
     SClosePosition ClosePosition;
-    int I = 0;
-    int X = 1;
-    int Y = 1;
-    int K = 1;
+    int Left = 1;
+    int Right = ARENA_WIDTH - 2;
+    int Top = 1;
+    int Bottom = ARENA_HEIGHT - 2;
 
-    while (K < 6 && I < 143)
+    // Walk the complete playable area inwards, layer by layer.  The old
+    // implementation had fixed limits for a 15-column arena and left the
+    // widened arena's centre unclosed.
+    while (Left <= Right && Top <= Bottom)
     {
-        while (X < ARENA_WIDTH - K)
+        for (int X = Left; X <= Right; X++)
         {
             ClosePosition.X = X;
-            ClosePosition.Y = Y;
+            ClosePosition.Y = Top;
             m_ClosureData.push_back (ClosePosition);
-            X++; 
-            I++;
         }
 
-        X = ARENA_WIDTH - 1 - K;
-        Y++;
-
-        while (Y < ARENA_HEIGHT - K)
+        for (int Y = Top + 1; Y <= Bottom; Y++)
         {
-            ClosePosition.X = X;
+            ClosePosition.X = Right;
             ClosePosition.Y = Y;
             m_ClosureData.push_back (ClosePosition);
-            Y++;
-            I++;
         }
 
-        Y = ARENA_HEIGHT - 1 - K;
-        X--;
-
-        while (X >= 0 + K)
+        if (Top < Bottom)
         {
-            ClosePosition.X = X;
-            ClosePosition.Y = Y;
-            m_ClosureData.push_back (ClosePosition);
-            X--;
-            I++;
+            for (int X = Right - 1; X >= Left; X--)
+            {
+                ClosePosition.X = X;
+                ClosePosition.Y = Bottom;
+                m_ClosureData.push_back (ClosePosition);
+            }
         }
 
-        X = 0 + K;
-        Y--;
-
-        while (Y >= 2 + K)
+        if (Left < Right)
         {
-            ClosePosition.X = X;
-            ClosePosition.Y = Y;
-            m_ClosureData.push_back (ClosePosition);
-            Y--;
-            I++;
+            for (int Y = Bottom - 1; Y > Top; Y--)
+            {
+                ClosePosition.X = Left;
+                ClosePosition.Y = Y;
+                m_ClosureData.push_back (ClosePosition);
+            }
         }
 
-        Y = 2 + K;
-        Y--;
-
-        K++;
-    }
-
-    while (X <= 8)
-    {
-        ClosePosition.X = X;
-        ClosePosition.Y = Y;
-        m_ClosureData.push_back (ClosePosition);
-        X++;
-        I++;
+        Left++;
+        Right--;
+        Top++;
+        Bottom--;
     }
 }
 
@@ -193,7 +176,7 @@ void CArenaCloser::CreateHorizontalClosing (void)
     int X = -1;
     int Y = -1;
 
-    while (I <= 5)
+    while (I <= (ARENA_HEIGHT - 5) / 2)
     {
         X = ARENA_WIDTH - 2;
         Y = ARENA_HEIGHT - 2 - I;
@@ -242,7 +225,7 @@ void CArenaCloser::CreateVerticalClosing (void)
     int X;
     int Y;
 
-    while (I <= 5)
+    while (I <= (ARENA_WIDTH - 5) / 2)
     {
         X = 1 + I;
         Y = 1;

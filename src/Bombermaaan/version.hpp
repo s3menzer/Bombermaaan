@@ -1,8 +1,8 @@
 #pragma once
 
 #define BOMBERMAAAN_VERSION_STRING "1.4.1"
-#define BOMBERMAAAN_BUILD_STRING "685e"
-#define BOMBERMAAAN_BUILD_NUMBER            685
+#define BOMBERMAAAN_BUILD_STRING "686e"
+#define BOMBERMAAAN_BUILD_NUMBER            686
 
 // The file next to the executable, or the Switch SD card override file, can
 // replace this URL with a local/server-specific manifest URL.

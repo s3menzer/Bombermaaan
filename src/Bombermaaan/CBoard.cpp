@@ -423,7 +423,7 @@ void CBoard::Display (void)
         if (m_pOptions->GetBomberType(Player) != BOMBERTYPE_OFF
             && m_pArena->GetBomber(Player).HasExisted())
         {
-            int DeadHeadOffset = (m_pArena->GetBomber(Player).IsDead() ? 5 : 0);
+            int DeadHeadOffset = (m_pArena->GetBomber(Player).IsDead() ? PLAYER_COLOR_COUNT : 0);
 
             // Draw the player's bomber head
             m_pDisplay->DrawSprite (ScoreX, 

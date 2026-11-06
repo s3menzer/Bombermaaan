@@ -49,14 +49,20 @@
 #define BACKGROUND_SPRITE_LAYER                 0
 #define BACKGROUND_SPRITE_PRIORITY_IN_LAYER     0
 
-#define BOMBERS_POSITION_X                      0
+#ifdef USE_32_PIXELS_PER_BLOCK
+#define TITLE_CONTENT_OFFSET_X                  64
+#else
+#define TITLE_CONTENT_OFFSET_X                  32
+#endif
+
+#define BOMBERS_POSITION_X                      TITLE_CONTENT_OFFSET_X
 #define BOMBERS_POSITION_Y                      (VIEW_HEIGHT - 126)
 #define BOMBERS_SPRITE_TABLE                    43
 #define BOMBERS_SPRITE                          0
 #define BOMBERS_SPRITE_LAYER                    0
 #define BOMBERS_SPRITE_PRIORITY_IN_LAYER        2
 
-#define TITLE_POSITION_X                        7
+#define TITLE_POSITION_X                        (7 + TITLE_CONTENT_OFFSET_X)
 #define TITLE_POSITION_Y                        7
 #define TITLE_SPRITE_TABLE                      44
 #define TITLE_SPRITE                            0
@@ -68,10 +74,10 @@
 #define LAST_MENU_ITEM                          (NUMBER_OF_MENU_ITEMS - 1)
 #ifdef USE_32_PIXELS_PER_BLOCK
 #define FIRST_MENU_ITEM_POSITION_Y              180
-#define ALL_MENU_ITEMS_POSITION_X               195
+#define ALL_MENU_ITEMS_POSITION_X               (195 + TITLE_CONTENT_OFFSET_X)
 #else
 #define FIRST_MENU_ITEM_POSITION_Y              93
-#define ALL_MENU_ITEMS_POSITION_X               126
+#define ALL_MENU_ITEMS_POSITION_X               (126 + TITLE_CONTENT_OFFSET_X)
 #endif
 #define MENU_ITEM_SPRITE_TABLE                  45
 #define MENU_ITEM_SPRITE_LAYER                  0

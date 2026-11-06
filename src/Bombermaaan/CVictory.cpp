@@ -41,7 +41,7 @@
 #define VICTORY_SCREEN_DURATION         10.0f
 
 // The width of the victory view
-#define VICTORY_VIEW_WIDTH              (15*16)     // The width as in the 16-pixels version
+#define VICTORY_VIEW_WIDTH              (ARENA_WIDTH*16) // The width as in the 16-pixels version
 #define VICTORY_VIEW_HEIGHT             (26+13*16)  // The height as in the 16-pixels version
 
 // Display origin                               

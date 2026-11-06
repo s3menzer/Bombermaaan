@@ -107,7 +107,7 @@ using namespace std;
 #define MAX_PLAYERS                     8       //!< Maximum number of players
 #define MAX_PLAYER_SCORE                5       //!< Maximum score for a player
 #define MAX_DRAWGAME_SCORE              5       //!< Maximum score for draw games
-#define ARENA_WIDTH                     15      //!< Arena width in blocks
+#define ARENA_WIDTH                     19      //!< Arena width in blocks
 #define ARENA_HEIGHT                    13      //!< Arena height in blocks
 #ifdef USE_32_PIXELS_PER_BLOCK
 #define BLOCK_SIZE                      32      //!< Block size in pixels
