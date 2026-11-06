@@ -275,7 +275,9 @@ void CMatch::OpenInput (void)
             && m_Arena.GetBomber(Player).Exist())
         {
             // Open its player input given current options
-            m_pInput->GetPlayerInput(m_pOptions->GetPlayerInput(Player)).Open();
+            int PlayerInput = m_pOptions->GetPlayerInput(Player);
+            if (PlayerInput >= 0 && PlayerInput < m_pInput->GetPlayerInputCount())
+                m_pInput->GetPlayerInput(PlayerInput).Open();
         }
     }
 }
@@ -301,7 +303,9 @@ void CMatch::CloseInput (void)
             && m_Arena.GetBomber(Player).Exist())
         {
             // Close its player input given current options
-            m_pInput->GetPlayerInput(m_pOptions->GetPlayerInput(Player)).Close();
+            int PlayerInput = m_pOptions->GetPlayerInput(Player);
+            if (PlayerInput >= 0 && PlayerInput < m_pInput->GetPlayerInputCount())
+                m_pInput->GetPlayerInput(PlayerInput).Close();
         }
     }
 }
@@ -364,8 +368,11 @@ void CMatch::ProcessPlayerCommands (void)
                     // Get his player input using the options object
                     int PlayerInput = m_pOptions->GetPlayerInput (Player);
 
-                    // If this player input is opened
-                    if (m_pInput->GetPlayerInput(PlayerInput).IsOpened())
+                    // Ignore stale input assignments (for example, a joystick
+                    // that is no longer connected).
+                    if (PlayerInput >= 0 &&
+                        PlayerInput < m_pInput->GetPlayerInputCount() &&
+                        m_pInput->GetPlayerInput(PlayerInput).IsOpened())
                     {
                         // Update his player input
                         m_pInput->GetPlayerInput(PlayerInput).Update();
@@ -631,8 +638,11 @@ void CMatch::ManagePauseMessage (void)
                 // Get his player input using the options object
                 int PlayerInputNr = m_pOptions->GetPlayerInput (Player);
 
-                // If this player input is opened
-                if (m_pInput->GetPlayerInput(PlayerInputNr).IsOpened()) {
+                // Ignore stale input assignments (for example, a joystick
+                // that is no longer connected).
+                if (PlayerInputNr >= 0 &&
+                    PlayerInputNr < m_pInput->GetPlayerInputCount() &&
+                    m_pInput->GetPlayerInput(PlayerInputNr).IsOpened()) {
 
                     if ( m_pInput->GetPlayerInput(PlayerInputNr).TestPause() ) {
                         joystickRequestedPause  = true;
@@ -669,7 +679,9 @@ void CMatch::ManagePauseMessage (void)
         
         // Update joysticks
         for ( int i = 0; i < MAX_PLAYERS; i++ ) {
-            m_pInput->GetPlayerInput(m_pOptions->GetPlayerInput(i)).Update();
+            int PlayerInput = m_pOptions->GetPlayerInput(i);
+            if (PlayerInput >= 0 && PlayerInput < m_pInput->GetPlayerInputCount())
+                m_pInput->GetPlayerInput(PlayerInput).Update();
         }
 
         // If the pause message has left the screen

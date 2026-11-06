@@ -14,6 +14,18 @@ build_linux() {
   # Generated dependency files may contain absolute include paths from a
   # previous Windows/container build. Remove them before changing toolchains.
   make -C src clean
+  # The Linux makefile does not list the Windows-only objects, so a previous
+  # Windows build can otherwise leave CDirectDraw.o/CDirectInput.o and, more
+  # importantly, objects compiled with -DWIN32. Always start from a
+  # platform-clean object tree.
+  find src -type f \( \
+    -name '*.o' -o \
+    -name '*.a' -o \
+    -name '*.so' -o \
+    -name '*.so.*' -o \
+    -name '.depend' -o \
+    -name 'Bombermaaan' \
+  \) -delete
   make -C src -j"$jobs"
 
   local package="$BUILD_DIR/Bombermaaan-linux"
@@ -25,15 +37,14 @@ build_linux() {
   ln -s libbombermaaan.so.1.0.0 "$package/lib/libbombermaaan.so.1"
   ln -s libbombermaaan.so.1.0.0 "$package/lib/libbombermaaan.so"
 
-  local runtime_dir="$PROJECT_ROOT/src/_Test_/Bombermaaan_1.4.1.628_20240225_win32_menzer"
-  if [[ ! -d "$runtime_dir/Levels" ]]; then
-    runtime_dir="$PROJECT_ROOT/src/_Test_/Release"
-  fi
-  find "$runtime_dir/Levels" -maxdepth 1 -type f -iname '*.txt' \
+  local levels_dir="$PROJECT_ROOT/src/debian/usr/share/games/bombermaaan/Levels"
+  find "$levels_dir" -maxdepth 1 -type f -iname '*.txt' \
     -exec cp {} "$package/Levels/" \;
   find "$package/Levels" -maxdepth 1 -type f \
     -exec cp {} "$package/share/games/bombermaaan/Levels/" \;
-  cp "$runtime_dir/"{config.xml,Readme.html,COPYING.txt,CHANGELOG.txt} "$package/"
+  cp "$PROJECT_ROOT/src/debian/usr/share/doc/bombermaaan/Readme.html" "$package/"
+  cp "$PROJECT_ROOT/COPYING.txt" "$package/"
+  cp "$PROJECT_ROOT/src/CHANGELOG.txt" "$package/"
   printf '%s\n' '#!/bin/sh' \
     'ROOT="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"' \
     'cd "$ROOT" || exit 1' \

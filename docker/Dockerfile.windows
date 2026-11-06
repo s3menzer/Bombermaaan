@@ -1,0 +1,33 @@
+FROM debian:bookworm-slim
+
+RUN apt-get update \
+  && apt-get install --no-install-recommends -y \
+    binutils-mingw-w64-x86-64 \
+    ca-certificates \
+    g++-mingw-w64-x86-64 \
+    mingw-w64-tools \
+    autoconf \
+    automake \
+    libtool \
+    make \
+    zip \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY src/third-party/SDL-1.2-release-1.2.15 /tmp/SDL
+COPY src/third-party/SDL_mixer-1.2.12/include/SDL_mixer.h /tmp/SDL_mixer.h
+COPY src/third-party/SDL_mixer-1.2.12/lib/x64/SDL_mixer.dll /tmp/SDL_mixer.dll
+
+RUN cd /tmp/SDL \
+  && sh autogen.sh \
+  && ./configure --host=x86_64-w64-mingw32 --prefix=/opt/mingw \
+      --disable-video-opengl \
+  && make -j"$(nproc)" \
+  && make install \
+  && cp /tmp/SDL_mixer.h /opt/mingw/include/ \
+  && cp /tmp/SDL_mixer.h /opt/mingw/include/SDL/ \
+  && cp /tmp/SDL_mixer.dll /opt/mingw/bin/ \
+  && cd /tmp \
+  && gendef SDL_mixer.dll \
+  && x86_64-w64-mingw32-dlltool -d SDL_mixer.def \
+      -l /opt/mingw/lib/libSDL_mixer.dll.a \
+      -m i386:x86-64

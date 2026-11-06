@@ -52,9 +52,15 @@
 #define WINNER_DISPLAY_ORIGIN_X       0       //!< Display origin of the winner screen
 #define WINNER_DISPLAY_ORIGIN_Y       0
 
-// Deltas for 16 and 32 pixel versions
+// The original scoreboard was sized for five player rows. Keep enough
+// vertical space for all eight rows in the 32-pixel layout.
+#ifdef USE_32_PIXELS_PER_BLOCK
+#define WINNER_SCOREBOARD_HEIGHT        328
+#else
+#define WINNER_SCOREBOARD_HEIGHT        234
+#endif
 #define WINNER_SPRITES_OFFSET_X         ((VIEW_WIDTH - 240) / 2)
-#define WINNER_SPRITES_OFFSET_Y         ((VIEW_HEIGHT - 234) / 2)
+#define WINNER_SPRITES_OFFSET_Y         ((VIEW_HEIGHT - WINNER_SCOREBOARD_HEIGHT) / 2)
 
 // Sprite layer & priority                  
 #define WINNER_SPRITE_LAYER             0       //!< Sprite layer where to draw the winner screen sprites
@@ -75,7 +81,15 @@
 #define LIGHTS_FULLROW2_POSITION_X      9       //!< First light position of the second full row of lights to draw
 #define LIGHTS_FULLROW2_POSITION_Y      42
 #define LIGHTS_FULLROW3_POSITION_X      9       //!< First light position of the third full row of lights to draw
+#ifdef USE_32_PIXELS_PER_BLOCK
+#define LIGHTS_FULLROW3_POSITION_Y      318
+#define LIGHTS_FULLCOLUMN_COUNT         45
+#define LIGHTS_SEMICOLUMN_COUNT         40
+#else
 #define LIGHTS_FULLROW3_POSITION_Y      224
+#define LIGHTS_FULLCOLUMN_COUNT         32
+#define LIGHTS_SEMICOLUMN_COUNT         27
+#endif
 #define LIGHTS_FULLCOLUMN1_POSITION_X   9       //!< First light position of the first full column of lights to draw
 #define LIGHTS_FULLCOLUMN1_POSITION_Y   7
 #define LIGHTS_FULLCOLUMN2_POSITION_X   226     //!< First light position of the second full column of lights to draw
@@ -83,8 +97,6 @@
 #define LIGHTS_SEMICOLUMN_POSITION_X    51      //!< First light position of the semi column of lights to draw
 #define LIGHTS_SEMICOLUMN_POSITION_Y    42
 #define LIGHTS_FULLROW_COUNT            32      //!< How many lights in a full row?
-#define LIGHTS_FULLCOLUMN_COUNT         32      //!< How many lights in a full column?
-#define LIGHTS_SEMICOLUMN_COUNT         27      //!< How many lights in the semi column?
 #define LIGHTS_SPACE_X                  7       //!< Space (in pixels) between two lights's X positions
 #define LIGHTS_SPACE_Y                  7       //!< Space (in pixels) between two lights's Y positions
 #define LIGHTS_ANIMATION_TIME_0         0.150f  //!< Light animation times
@@ -95,8 +107,13 @@
        
 // Bomber stuff
 #define BOMBER_INITIAL_POSITION_X       20      //!< First (top) bomber position
+#ifdef USE_32_PIXELS_PER_BLOCK
 #define BOMBER_INITIAL_POSITION_Y       55
 #define BOMBER_SPACE_Y                  33      //!< Space in pixels between two bombers Y position
+#else
+#define BOMBER_INITIAL_POSITION_Y       40
+#define BOMBER_SPACE_Y                  22      //!< Compact spacing for the 16-pixel display
+#endif
 #define BOMBER_HAPPY_SPRITE_0           0       //!< Happy bomber sprites
 #define BOMBER_HAPPY_SPRITE_1           1
 #define BOMBER_SAD_SPRITE_0             2       //!< Sad bomber sprites (crying bomber)
@@ -230,7 +247,12 @@ void CWinner::OpenInput (void)
     // Open everyone's input device so the screen can be left with specific joystick button
     for (int i = 0; i < MAX_PLAYERS; i++)
     {
-        m_pInput->GetPlayerInput(m_pOptions->GetPlayerInput(i)).Open();
+        if (m_pOptions->GetBomberType(i) != BOMBERTYPE_MAN)
+            continue;
+
+        int PlayerInput = m_pOptions->GetPlayerInput(i);
+        if (PlayerInput >= 0 && PlayerInput < m_pInput->GetPlayerInputCount())
+            m_pInput->GetPlayerInput(PlayerInput).Open();
     }
 }
 
@@ -245,7 +267,12 @@ void CWinner::CloseInput (void)
     // Close everyone's input device
     for (int i = 0; i < MAX_PLAYERS; i++)
     {
-        m_pInput->GetPlayerInput(m_pOptions->GetPlayerInput(i)).Close();
+        if (m_pOptions->GetBomberType(i) != BOMBERTYPE_MAN)
+            continue;
+
+        int PlayerInput = m_pOptions->GetPlayerInput(i);
+        if (PlayerInput >= 0 && PlayerInput < m_pInput->GetPlayerInputCount())
+            m_pInput->GetPlayerInput(PlayerInput).Close();
     }
 }
                    
@@ -301,8 +328,11 @@ EGameMode CWinner::Update (void)
                     // Get his player input using the options object
                     int PlayerInputNr = m_pOptions->GetPlayerInput (Player);
 
-                    // If this player input is opened
-                    if (m_pInput->GetPlayerInput(PlayerInputNr).IsOpened()) {
+                    // Ignore stale input assignments (for example, a joystick that
+                    // is no longer connected).
+                    if (PlayerInputNr >= 0 &&
+                        PlayerInputNr < m_pInput->GetPlayerInputCount() &&
+                        m_pInput->GetPlayerInput(PlayerInputNr).IsOpened()) {
                         m_pInput->GetPlayerInput(PlayerInputNr).Update();
                         // LeaveScreen ||= resulted in error C2059
                         LeaveScreen |= m_pInput->GetPlayerInput(PlayerInputNr).TestMenuNext();

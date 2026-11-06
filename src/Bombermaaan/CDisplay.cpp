@@ -106,9 +106,9 @@ bool CDisplay::Create (int Width, int Height, int Depth, bool FullScreen)
             !LoadSprites (28,     1,      32,     32,     true,     BMP_ARENA_FLAME               ) ||
             !LoadSprites (16,     1,      32,     32,     false,    BMP_ARENA_ITEM                ) ||
             !LoadSprites (3,      1,      32,     32,     true,     BMP_ARENA_BOMB                ) ||			
-            !LoadSprites (12,     7,      42,     44,     true,     BMP_ARENA_BOMBER_WALK         ) ||
+            !LoadSprites (12,    10,      42,     44,     true,     BMP_ARENA_BOMBER_WALK         ) ||
             !LoadSprites (7,      1,      52,     54,     true,     BMP_ARENA_FIRE                ) ||
-            !LoadSprites (12,     7,      42,     44,     true,     BMP_ARENA_BOMBER_WALK_HOLD    ) ||
+            !LoadSprites (12,    10,      42,     44,     true,     BMP_ARENA_BOMBER_WALK_HOLD    ) ||
             !LoadSprites (4,      1,      32,     32,     true,     BMP_ARENA_FLY                 ) ||
             !LoadSprites (1,      1,      480,    26,     false,    BMP_BOARD_BACKGROUND          ) ||
 #else
@@ -117,9 +117,9 @@ bool CDisplay::Create (int Width, int Height, int Depth, bool FullScreen)
             !LoadSprites (28,     1,      16,     16,     true,     BMP_ARENA_FLAME               ) ||
             !LoadSprites (16,     1,      16,     16,     false,    BMP_ARENA_ITEM                ) ||
             !LoadSprites (3,      1,      16,     16,     true,     BMP_ARENA_BOMB                ) ||
-            !LoadSprites (12,     7,      21,     22,     true,     BMP_ARENA_BOMBER_WALK         ) ||
+            !LoadSprites (12,    10,      21,     22,     true,     BMP_ARENA_BOMBER_WALK         ) ||
             !LoadSprites (7,      1,      26,     27,     true,     BMP_ARENA_FIRE                ) ||
-            !LoadSprites (12,     7,      21,     22,     true,     BMP_ARENA_BOMBER_WALK_HOLD    ) ||
+            !LoadSprites (12,    10,      21,     22,     true,     BMP_ARENA_BOMBER_WALK_HOLD    ) ||
             !LoadSprites (4,      1,      16,     16,     true,     BMP_ARENA_FLY                 ) ||
             !LoadSprites (1,      1,      240,    26,     false,    BMP_BOARD_BACKGROUND          ) ||
 #endif
@@ -127,7 +127,7 @@ bool CDisplay::Create (int Width, int Height, int Depth, bool FullScreen)
             !LoadSprites (2,      1,      15,     7,      true,     BMP_BOARD_CLOCK_TOP           ) ||
             !LoadSprites (8,      1,      15,     13,     true,     BMP_BOARD_CLOCK_BOTTOM        ) ||
             !LoadSprites (6,      1,      6,      8,      true,     BMP_BOARD_SCORE               ) ||
-            !LoadSprites (5,      2,      14,     14,     true,     BMP_BOARD_HEADS               ) ||
+            !LoadSprites (8,      2,      14,     14,     true,     BMP_BOARD_HEADS               ) ||
 #ifdef USE_32_PIXELS_PER_BLOCK
             !LoadSprites (1,      1,      480,    442,    false,    BMP_DRAWGAME_MAIN             ) ||
 			!LoadSprites (2,      1,      68,     96,     false,    BMP_DRAWGAME_FLAG             ) ||
@@ -137,7 +137,7 @@ bool CDisplay::Create (int Width, int Height, int Depth, bool FullScreen)
 			!LoadSprites (2,      1,      34,     48,     false,    BMP_DRAWGAME_FLAG             ) ||
             !LoadSprites (4,      1,      10,     31,     true,     BMP_DRAWGAME_FUMES            ) ||
 #endif
-            !LoadSprites (4,      5,      24,     32,     true,     BMP_WINNER_BOMBER             ) ||
+            !LoadSprites (4,      8,      24,     32,     true,     BMP_WINNER_BOMBER             ) ||
             !LoadSprites (1,      1,      64,     32,     false,    BMP_WINNER_BACKGROUND_1       ) ||
             !LoadSprites (16,     1,      22,     22,     true,     BMP_WINNER_COIN               ) || // 20
             !LoadSprites (4,      1,      6,      6,      true,     BMP_WINNER_LIGHTS             ) ||
@@ -145,11 +145,11 @@ bool CDisplay::Create (int Width, int Height, int Depth, bool FullScreen)
             !LoadSprites (1,      1,      158,    16,     true,     BMP_WINNER_TITLE              ) ||
             !LoadSprites (1,      1,      32,     135,    false,    BMP_VICTORY_WALL              ) ||
             !LoadSprites (9,      1,      14,     16,     true,     BMP_VICTORY_CROWD             ) ||
-            !LoadSprites (14,     5,      36,     61,     true,     BMP_VICTORY_BOMBER            ) ||
+            !LoadSprites (14,     8,      36,     61,     true,     BMP_VICTORY_BOMBER            ) ||
             !LoadSprites (1,      1,      192,    60,     true,     BMP_VICTORY_TITLE             ) ||
             !LoadSprites (46,     6,      10,     10,     true,     BMP_GLOBAL_FONT               ) ||
             !LoadSprites (1,      1,      64,     32,     false,    BMP_MENU_BACKGROUND_1         ) ||
-            !LoadSprites (5,      2,      21,     19,     true,     BMP_MENU_BOMBER               ) || // 30
+            !LoadSprites (8,      2,      21,     19,     true,     BMP_MENU_BOMBER               ) || // 30
 #ifdef USE_32_PIXELS_PER_BLOCK
             !LoadSprites (1,      1,      420,    362,    true,     BMP_MENU_FRAME_1              ) ||
 #else
@@ -200,23 +200,23 @@ bool CDisplay::Create (int Width, int Height, int Depth, bool FullScreen)
             !LoadSprites (1,      1,      66,     22,     true,     BMP_TITLE_CLOUD_3             ) ||
 #ifdef USE_32_PIXELS_PER_BLOCK
             !LoadSprites (8,      1,      16,     16,     true,     BMP_LEVEL_MINI_TILES          ) ||
-            !LoadSprites (5,      1,      24,     20,     true,     BMP_LEVEL_MINI_BOMBERS        ) ||
-            !LoadSprites (7,      5,      42,     44,     true,     BMP_ARENA_BOMBER_DEATH        ) ||
-            !LoadSprites (12,     7,      42,     44,     true,     BMP_ARENA_BOMBER_LIFT         ) || 
-            !LoadSprites (20,     7,      42,     44,     true,     BMP_ARENA_BOMBER_THROW        ) || // 60
-            !LoadSprites (8,      7,      42,     44,     true,     BMP_ARENA_BOMBER_PUNCH        ) ||
-            !LoadSprites (4,      7,      42,     44,     true,     BMP_ARENA_BOMBER_STUNT        ) ||
+            !LoadSprites (8,      1,      24,     20,     true,     BMP_LEVEL_MINI_BOMBERS        ) ||
+            !LoadSprites (7,      8,      42,     44,     true,     BMP_ARENA_BOMBER_DEATH        ) ||
+            !LoadSprites (12,     10,     42,     44,     true,     BMP_ARENA_BOMBER_LIFT         ) || 
+            !LoadSprites (20,     10,     42,     44,     true,     BMP_ARENA_BOMBER_THROW        ) || // 60
+            !LoadSprites (8,      10,     42,     44,     true,     BMP_ARENA_BOMBER_PUNCH        ) ||
+            !LoadSprites (4,      10,     42,     44,     true,     BMP_ARENA_BOMBER_STUNT        ) ||
             !LoadSprites (4,      1,      32,     32,     true,     BMP_ARENA_ARROWS              ) || // 63
             !LoadSprites (1,      1,      30,     32,     true,     BMP_MENU_HAND_TITLE           ) ||
 			!LoadSprites (3,      1,      32,     32,     true,     BMP_ARENA_REMOTE_BOMB         ) 
 #else
             !LoadSprites (8,      1,       8,      8,     true,     BMP_LEVEL_MINI_TILES          ) ||
-            !LoadSprites (5,      1,      12,     10,     true,     BMP_LEVEL_MINI_BOMBERS        ) ||
-            !LoadSprites (7,      5,      21,     22,     true,     BMP_ARENA_BOMBER_DEATH        ) ||
-            !LoadSprites (12,     7,      21,     22,     true,     BMP_ARENA_BOMBER_LIFT         ) || 
-            !LoadSprites (20,     7,      21,     22,     true,     BMP_ARENA_BOMBER_THROW        ) || // 60
-            !LoadSprites (8,      7,      21,     22,     true,     BMP_ARENA_BOMBER_PUNCH        ) ||
-            !LoadSprites (4,      7,      21,     22,     true,     BMP_ARENA_BOMBER_STUNT        ) ||
+            !LoadSprites (8,      1,      12,     10,     true,     BMP_LEVEL_MINI_BOMBERS        ) ||
+            !LoadSprites (7,      8,      21,     22,     true,     BMP_ARENA_BOMBER_DEATH        ) ||
+            !LoadSprites (12,     10,     21,     22,     true,     BMP_ARENA_BOMBER_LIFT         ) || 
+            !LoadSprites (20,     10,     21,     22,     true,     BMP_ARENA_BOMBER_THROW        ) || // 60
+            !LoadSprites (8,      10,     21,     22,     true,     BMP_ARENA_BOMBER_PUNCH        ) ||
+            !LoadSprites (4,      10,     21,     22,     true,     BMP_ARENA_BOMBER_STUNT        ) ||
             !LoadSprites (4,      1,      16,     16,     true,     BMP_ARENA_ARROWS              ) || // 63
             !LoadSprites (1,      1,      15,     16,     true,     BMP_MENU_HAND_TITLE           ) ||
 			!LoadSprites (3,      1,      16,     16,     true,     BMP_ARENA_REMOTE_BOMB         ) 

@@ -26,13 +26,6 @@ jobs:
           persist-credentials: true
           fetch-depth: 1
 
-      - name: Install Linux build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends -y \
-            g++ make zip \
-            libsdl1.2-dev libsdl-mixer1.2-dev
-
       - name: Checkout submodules
         shell: bash
         run: |
@@ -48,33 +41,13 @@ jobs:
 
       - name: Build Linux
         shell: bash
-        run: make -C src -j"$(nproc)"
-
-      - name: Package Linux artifact
-        shell: bash
-        run: |
-          set -euo pipefail
-          package="Bombermaaan-linux"
-          rm -rf "$package"
-          mkdir -p "$package/bin" "$package/lib" "$package/Levels"
-          cp src/Bombermaaan/Bombermaaan "$package/bin/"
-          cp src/RESGEN/libbombermaaan.so.1.0.0 "$package/lib/"
-          cp src/_Test_/Bombermaaan_1.4.1.628_20240225_win32_menzer/Levels/*.TXT \
-            "$package/Levels/"
-          cp src/_Test_/Bombermaaan_1.4.1.628_20240225_win32_menzer/{config.xml,Readme.html,COPYING.txt,CHANGELOG.txt} \
-            "$package/"
-          printf '%s\n' '#!/bin/sh' \
-            'ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"' \
-            'LD_LIBRARY_PATH="$ROOT/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" exec "$ROOT/bin/Bombermaaan" "$@"' \
-            > "$package/launch.sh"
-          chmod +x "$package/launch.sh"
-          zip -qr Bombermaaan-linux.zip "$package"
+        run: ./scripts/docker-build-linux.sh
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
           name: bombermaaan-linux
-          path: Bombermaaan-linux.zip
+          path: build-linux/*.zip
           if-no-files-found: error
 
   build-windows:
@@ -103,50 +76,13 @@ jobs:
 
       - name: Build and package Windows
         shell: msys2 {0}
-        run: |
-          set -euo pipefail
-          make -C src/RES -f Makefile.win CROSS=1 \
-            CPP=x86_64-w64-mingw32-g++ CC=x86_64-w64-mingw32-gcc \
-            WINDRES=x86_64-w64-mingw32-windres
-          make -C src/RES32 -f Makefile.win CROSS=1 \
-            CPP=x86_64-w64-mingw32-g++ CC=x86_64-w64-mingw32-gcc \
-            WINDRES=x86_64-w64-mingw32-windres
-          make -C src/Bombermaaan -f Makefile.win CROSS=1 \
-            CPP=x86_64-w64-mingw32-g++ CC=x86_64-w64-mingw32-gcc \
-            WINDRES=x86_64-w64-mingw32-windres \
-            SDL_CONFIG=/mingw64/bin/sdl-config
-
-          package="Bombermaaan-windows"
-          rm -rf "$package"
-          cp -a src/_Test_/Bombermaaan_1.4.1.628_20240225_win32_menzer "$package"
-          cp src/Bombermaaan/Bombermaaan_32.exe "$package/Bombermaaan.exe"
-          rm -f "$package"/*.dll
-          cp src/RES/Bombermaaan.dll "$package/"
-          cp src/RES32/Bombermaaan_32.dll "$package/"
-          # Collect the MinGW runtime and SDL DLLs required by the newly
-          # built 64-bit executable and resource libraries.
-          queue=("Bombermaaan.exe" "Bombermaaan.dll" "Bombermaaan_32.dll")
-          declare -A seen=()
-          while ((${#queue[@]})); do
-            file="${queue[0]}"
-            queue=("${queue[@]:1}")
-            while read -r dependency; do
-              [[ -n "$dependency" && -f "$dependency" ]] || continue
-              name="$(basename "$dependency")"
-              [[ -n "${seen[$name]:-}" ]] && continue
-              seen["$name"]=1
-              cp "$dependency" "$package/$name"
-              queue+=("$name")
-            done < <(ldd "$package/$file" 2>/dev/null |
-              sed -n 's/.*=> \(\/mingw64\/bin\/[^ ]*\.dll\).*/\1/p')
-          done
-          zip -qr Bombermaaan-windows.zip "$package"
+        run: IN_CONTAINER=1 ./scripts/docker-build-windows.sh
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: bombermaaan-windows
-          path: Bombermaaan-windows.zip
+          path: build-windows/*.zip
           if-no-files-found: error
 
   build-switch:
@@ -179,7 +115,7 @@ jobs:
         run: |
           set -euo pipefail
           CONTAINER_USE_HOST_USER=1 \
-            bash src/native-switch/docker-build.sh
+            bash scripts/docker-build-switch.sh
 
       - name: Collect Switch artifacts
         shell: bash

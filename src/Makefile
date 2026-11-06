@@ -8,7 +8,7 @@ SHELL=/bin/sh
 
 prefix?=/usr/local
 # Normalize the prefix before recursive makes change directory.  This also
-# makes relative prefixes such as ./_Test_/Linux work from every subdirectory.
+# makes relative installation prefixes work from every subdirectory.
 override prefix := $(abspath $(prefix))
 export prefix
 exec_prefix=${prefix}

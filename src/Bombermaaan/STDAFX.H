@@ -103,7 +103,7 @@ using namespace std;
 #define PLAYER_6                        5       //!< Player number of the sixth bomber
 #define PLAYER_7                        6       //!< Player number of the seventh bomber
 #define PLAYER_8                        7       //!< Player number of the eighth bomber
-#define PLAYER_COLOR_COUNT              5       //!< Number of bomber colors in the original sprite resources
+#define PLAYER_COLOR_COUNT              8       //!< Number of bomber colors in the sprite resources
 #define MAX_PLAYERS                     8       //!< Maximum number of players
 #define MAX_PLAYER_SCORE                5       //!< Maximum score for a player
 #define MAX_DRAWGAME_SCORE              5       //!< Maximum score for draw games

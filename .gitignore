@@ -11,7 +11,6 @@ src/RES32/Debug
 src/RES32/Release
 src/third-party/SDL
 src/third-party/SDL_mixer
-src/_Test_/
 /src/RESGEN
 *.suo
 *.so*
@@ -26,3 +25,10 @@ src/_Test_/
 /build-linux
 /build-windows
 /build-switch
+/docker-build-windows.log
+/src/Bombermaaan/Bombermaaan_32.exe
+/src/RES32/Bombermaaan_32.dll
+/src/Bombermaaan/Bombermaaan.res
+/src/RES/Bombermaaan.dll
+/src/RES32/resource.res
+/src/RES/resource.res

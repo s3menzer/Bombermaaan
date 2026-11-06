@@ -47,14 +47,14 @@ These are the steps how to get Bombermaaan successfully compiled on Windows 32 b
   SDL-devel-1.2.15-VC.zip, about 607 kB (https://www.libsdl.org/release/SDL-devel-1.2.15-VC.zip)<br>
   The VC8 file is also working for VC9<br>
   Copy folder SDL-1.2.13 from the zip file to src/third-party/ folder and rename it to "SDL"<br>
-  Copy all DLL files from the lib subdirectory to the directory src/_Test_/Release, where Bombermaaan.exe will be generated (needed at runtime)
+  Copy all DLL files from the lib subdirectory to the directory containing Bombermaaan.exe (needed at runtime)
   
 - Download SDL_mixer development libraries
   http://www.libsdl.org/projects/SDL_mixer/<br>
   SDL_mixer-devel-1.2.12-VC.zip, about 332 kB (https://www.libsdl.org/projects/SDL_mixer/release/SDL_mixer-devel-1.2.12-VC.zip)<br>
   The VC8 file is also working for VC9<br>
   Copy folder SDL_mixer-1.2.8 from the zip file to src/third-party/ folder and rename it to "SDL_mixer"<br>
-  Copy all DLL files from the lib subdirectory to the directory src/_Test_/Release, where Bombermaaan.exe will be generated (needed at runtime)
+  Copy all DLL files from the lib subdirectory to the directory containing Bombermaaan.exe (needed at runtime)
 
 - Place afxres.h and winres.h in the Bombermaaan directory and in the resource directories RES and RES32. 
   You'll find these two files in a subdirectory of the installed Windows Platform SDK.<br>
