@@ -133,6 +133,7 @@
 #define CONFETTI_RESET_SPEED_X          float (RANDOM(110)-70)      //!< Speed to set when resetting the confetti
 #define CONFETTI_RESET_SPEED_Y          float (RANDOM(100)+40)
 #define CONFETTIS_COUNT_PER_COLOR       5               //!< How many confettis per color?
+#define CONFETTIS_COLOR_COUNT            5               //!< The confetti bitmaps contain five colors
 
 // VICTORY! Title
 #define VICTORY_TITLE_SPRITE            0       //!< Sprite number of the title
@@ -749,7 +750,7 @@ void CVictory::Display (void)
                                     NULL,                            // Draw entire sprite
                                     &Clip,                           // Clip to game view
                                     ConfettiSpriteTable,
-                                    (WinnerPlayer % PLAYER_COLOR_COUNT) * CONFETTIS_COUNT_PER_COLOR + m_Confettis[Confetti].Sprite,  // Get the confetti sprite of the color of the winner
+                                    (WinnerPlayer % CONFETTIS_COLOR_COUNT) * CONFETTIS_COUNT_PER_COLOR + m_Confettis[Confetti].Sprite,  // Get an available confetti color
                                     VICTORY_CONFETTIS_LAYER,
                                     PRIORITY_UNUSED);
         }

@@ -139,6 +139,7 @@
 // Cross stuff
 #define CROSS_SPACE_X           1   //!< Space in pixels between a cross sprite position for one player
 #define CROSS_SPACE_Y           4   //!< and the bomber sprite position for the same player
+#define WINNER_CROSS_COLOR_COUNT 5   //!< winner_cross.bmp contains five colors
 
 // Sprite table stuff
 #define WINNER_BOMBER_SPRITETABLE           18
@@ -666,7 +667,7 @@ void CWinner::Display (void)
                                         NULL,                            // Draw entire sprite
                                         NULL,                            // No need to clip
                                         WINNER_CROSS_SPRITETABLE, 
-                                        Player % PLAYER_COLOR_COUNT,       // Appropriate color
+                                        Player % WINNER_CROSS_COLOR_COUNT, // Available cross color
                                         WINNER_SPRITE_LAYER, 
                                         WINNER_CROSS_PRIORITY);
             }

@@ -52,6 +52,17 @@ CPlayerInput::~CPlayerInput (void)
     // Nothing to do
 }
 
+bool CPlayerInput::HasValidJoystick (void) const
+{
+    if (m_pDirectInput == NULL ||
+        m_PlayerInput < NUMBER_OF_KEYBOARD_CONFIGURATIONS)
+        return false;
+
+    int Joystick = m_PlayerInput - NUMBER_OF_KEYBOARD_CONFIGURATIONS;
+    return Joystick >= 0 &&
+           Joystick < m_pDirectInput->GetJoystickCount();
+}
+
 //******************************************************************************************************************************
 //******************************************************************************************************************************
 //******************************************************************************************************************************
@@ -102,6 +113,9 @@ void CPlayerInput::Destroy (void)
 
 void CPlayerInput::Open (void)
 {   
+    if (m_pDirectInput == NULL)
+        return;
+
     // If the player input is one of the keyboard configurations
     if (m_PlayerInput < NUMBER_OF_KEYBOARD_CONFIGURATIONS)
     {
@@ -111,6 +125,9 @@ void CPlayerInput::Open (void)
     // If the player input is a joystick
     else
     {
+        if (!HasValidJoystick())
+            return;
+
         // Get access to the specified joystick
         m_pDirectInput->OpenJoystick (m_PlayerInput - NUMBER_OF_KEYBOARD_CONFIGURATIONS);
     }
@@ -122,6 +139,9 @@ void CPlayerInput::Open (void)
 
 bool CPlayerInput::IsOpened (void)
 {
+    if (m_pDirectInput == NULL)
+        return false;
+
     // If the player input is one of the keyboard configurations
     if (m_PlayerInput < NUMBER_OF_KEYBOARD_CONFIGURATIONS)
     {
@@ -131,6 +151,9 @@ bool CPlayerInput::IsOpened (void)
     // If the player input is a joystick
     else
     {
+        if (!HasValidJoystick())
+            return false;
+
         // Return whether the specified joystick is opened or not
         return m_pDirectInput->IsJoystickOpened (m_PlayerInput - NUMBER_OF_KEYBOARD_CONFIGURATIONS);
     }
@@ -142,6 +165,9 @@ bool CPlayerInput::IsOpened (void)
 
 void CPlayerInput::Close (void)
 {
+    if (m_pDirectInput == NULL)
+        return;
+
     // If the player input is one of the keyboard configurations
     if (m_PlayerInput < NUMBER_OF_KEYBOARD_CONFIGURATIONS)
     {
@@ -151,6 +177,9 @@ void CPlayerInput::Close (void)
     // If the player input is a joystick
     else
     {   
+        if (!HasValidJoystick())
+            return;
+
         // Release access to the specified joystick
         m_pDirectInput->CloseJoystick (m_PlayerInput - NUMBER_OF_KEYBOARD_CONFIGURATIONS);
     }
@@ -162,6 +191,9 @@ void CPlayerInput::Close (void)
 
 void CPlayerInput::Update (void)
 {
+    if (m_pDirectInput == NULL)
+        return;
+
     // If the player input is one of the keyboard configurations
     if (m_PlayerInput < NUMBER_OF_KEYBOARD_CONFIGURATIONS)
     {
@@ -171,6 +203,9 @@ void CPlayerInput::Update (void)
     // If the player input is a joystick
     else
     {   
+        if (!HasValidJoystick())
+            return;
+
         // Update the state of the specified joystick
         m_pDirectInput->UpdateJoystick (m_PlayerInput - NUMBER_OF_KEYBOARD_CONFIGURATIONS);
     }
@@ -182,6 +217,9 @@ void CPlayerInput::Update (void)
 
 int CPlayerInput::GetActivatedControl (void)
 {
+    if (m_pDirectInput == NULL)
+        return NO_ACTIVATED_CONTROL;
+
     // If the player input is one of the keyboard configurations
     if (m_PlayerInput < NUMBER_OF_KEYBOARD_CONFIGURATIONS)
     {
@@ -196,6 +234,9 @@ int CPlayerInput::GetActivatedControl (void)
     // If the player input is a joystick
     else
     {
+        if (!HasValidJoystick())
+            return NO_ACTIVATED_CONTROL;
+
         int AxisX = m_pDirectInput->GetJoystickAxisX (m_PlayerInput - NUMBER_OF_KEYBOARD_CONFIGURATIONS);
         int AxisY = m_pDirectInput->GetJoystickAxisY (m_PlayerInput - NUMBER_OF_KEYBOARD_CONFIGURATIONS);
 
@@ -269,6 +310,9 @@ const char* CPlayerInput::GetControlName (int Control)
 
 bool CPlayerInput::TestControl (int Control)
 {
+    if (m_pDirectInput == NULL)
+        return false;
+
     // If the player input is one of the keyboard configurations
     if (m_PlayerInput < NUMBER_OF_KEYBOARD_CONFIGURATIONS)
     {
@@ -278,6 +322,9 @@ bool CPlayerInput::TestControl (int Control)
     // If the player input is a joystick
     else
     {
+        if (!HasValidJoystick())
+            return false;
+
         int OptControl = m_pOptions->GetControl(m_PlayerInput, Control);
         if (OptControl < NUMBER_OF_JOYSTICK_DIRECTIONS)
         {
@@ -313,6 +360,9 @@ bool CPlayerInput::TestControl (int Control)
 
 bool CPlayerInput::TestMenuControl (int MenuControl)
 {
+    if (!HasValidJoystick())
+        return false;
+
     // If the player input is one of the keyboard configurations, leave!
     // This function is only for joystick control. Keyboard controls are handled by MainInput.
     if (m_PlayerInput < NUMBER_OF_KEYBOARD_CONFIGURATIONS)
