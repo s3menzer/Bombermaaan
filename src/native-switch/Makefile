@@ -117,7 +117,7 @@ $(LAUNCHER_NRO): $(LAUNCHER_ELF) $(NACP) $(APP_ICON)
 		--icon="$(APP_ICON)" \
 		--nacp="$(NACP)"
 
-$(GAME_NRO): $(GAME_ELF) $(NACP) $(APP_ICON) $(ROMFS) $(LEVELS_STAMP)
+$(GAME_NRO): $(GAME_ELF) $(NACP) $(APP_ICON) $(LEVELS_STAMP)
 	@echo creating $(notdir $@)
 	@elf2nro "$(GAME_ELF)" "$@" \
 		--icon="$(APP_ICON)" \

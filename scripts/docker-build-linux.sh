@@ -109,4 +109,4 @@ exec "$ENGINE" run --rm "${TTY_ARGS[@]}" "${USER_ARGS[@]}" \
   -e IN_CONTAINER=1 \
   -v "$PROJECT_ROOT:/workspace${VOLUME_SUFFIX}" \
   -w /workspace \
-  "$IMAGE" bash -lc './scripts/docker-build-linux.sh'
+  "$IMAGE" bash -lc 'bash ./scripts/docker-build-linux.sh'

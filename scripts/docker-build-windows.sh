@@ -134,7 +134,7 @@ set +e
       DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends make zip
       rm -rf /var/lib/apt/lists/*
     }
-    ./scripts/docker-build-windows.sh
+    bash ./scripts/docker-build-windows.sh
   ' 2>&1 | tee "$LOG_FILE"
 status="${PIPESTATUS[0]}"
 set -e
