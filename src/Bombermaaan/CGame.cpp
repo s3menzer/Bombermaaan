@@ -450,10 +450,25 @@ bool CGame::Create (char **pCommandLine, int pCommandLineCount)
 
     } else {
         // The current folder
+#ifdef BOMBERMAAAN_SWITCH
+        // RomFS is read-only and the current working directory is not a
+        // reliable place for persistent data on Switch. Keep the last
+        // configuration state on the SD card next to the application.
+        dynamicDataFolder = "sdmc:/switch/Bombermaaan/";
+        if (mkdir(dynamicDataFolder.c_str(),
+                  S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) &&
+            errno != EEXIST)
+        {
+            fprintf(stderr, "Could not create folder '%s'.\n",
+                    dynamicDataFolder.c_str());
+            return false;
+        }
+#else
 #ifdef WIN32
         dynamicDataFolder = ".\\";
 #else
         dynamicDataFolder = "./";
+#endif
 #endif
     }
 
