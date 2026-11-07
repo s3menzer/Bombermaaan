@@ -29,6 +29,16 @@
 
 #include "STDAFX.H"
 #include "CGame.h"
+
+#ifdef BOMBERMAAAN_SWITCH
+#ifdef __cplusplus
+extern "C" {
+#endif
+#include <switch/runtime/pad.h>
+#ifdef __cplusplus
+}
+#endif
+#endif
 #include "CWindow.h"
 #include "COptions.h"
 #include "CDisplay.h"
@@ -39,6 +49,7 @@
 #include "CMatch.h"
 #include "CScores.h"
 #include "CControls.h"
+#include "version.hpp"
 
 ENetworkMode    NetworkMode = NETWORKMODE_LOCAL;
 SOCKET          MySocket = INVALID_SOCKET;
@@ -83,10 +94,6 @@ SOCKET          ClientSocket = INVALID_SOCKET;
 #else
 #  define NAME_OF_BOMBERMAN_DLL "libbombermaaan.so"
 #endif
-
-// Bombermaaan version (build is suffixed with an "e" if the build is an experimental release)
-#define BOMBERMAAAN_VERSION_STRING      "1.4.1"
-#define BOMBERMAAAN_BUILD_STRING        "658e"
 
 //******************************************************************************************************************************
 //******************************************************************************************************************************
@@ -279,6 +286,12 @@ bool CGame::Create (char **pCommandLine, int pCommandLineCount)
     // and $HOME/.Bombermaaan when NOT called with --ignore-home-dir (see below) on Linux.
     std::string dynamicDataFolder;
 
+#ifdef BOMBERMAAAN_SWITCH
+    // Switch assets are packed into romfs and are mounted before CGame starts.
+    // Keep the game read-only on the packaged filesystem.
+    bool useAppDataFolder = false;
+    std::string pgmDirectory = "romfs:/";
+#else
 #ifdef WIN32
     // The "--use-appdata-dir" switch creates config and log file in the user's %APPDATA% directory (Windows)
     bool useAppDataFolder = ( strstr( pCommandLine, "--use-appdata-dir" ) != NULL );
@@ -381,6 +394,8 @@ bool CGame::Create (char **pCommandLine, int pCommandLineCount)
     }
 #endif
 
+#endif
+
     if ( useAppDataFolder )
     {
         // Check for the Bombermaaan directory in the appdata folder
@@ -435,10 +450,25 @@ bool CGame::Create (char **pCommandLine, int pCommandLineCount)
 
     } else {
         // The current folder
+#ifdef BOMBERMAAAN_SWITCH
+        // RomFS is read-only and the current working directory is not a
+        // reliable place for persistent data on Switch. Keep the last
+        // configuration state on the SD card next to the application.
+        dynamicDataFolder = "sdmc:/switch/Bombermaaan/";
+        if (mkdir(dynamicDataFolder.c_str(),
+                  S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) &&
+            errno != EEXIST)
+        {
+            fprintf(stderr, "Could not create folder '%s'.\n",
+                    dynamicDataFolder.c_str());
+            return false;
+        }
+#else
 #ifdef WIN32
         dynamicDataFolder = ".\\";
 #else
         dynamicDataFolder = "./";
+#endif
 #endif
     }
 
@@ -512,6 +542,12 @@ bool CGame::Create (char **pCommandLine, int pCommandLineCount)
 
     if ((SDL_Init(SDL_INIT_AUDIO) == -1)) // in WIN32 we need AUDIO for SDL_mixer (replacing FMOD)
 #else
+    // SDL2's Switch backend enumerates the configured Npad slots during
+    // initialization. Configure them before SDL starts so its logical
+    // SDL_GameController devices include detached Joy-Cons.
+#ifdef BOMBERMAAAN_SWITCH
+    padConfigureInput(8, HidNpadStyleSet_NpadStandard);
+#endif
     if ((SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_JOYSTICK) == -1))
 #endif
     { 
@@ -940,6 +976,16 @@ void CGame::OnWindowActive (void)
 
     m_Timer.Update();
     m_Input.GetMainInput().Update();
+
+#ifdef BOMBERMAAAN_SWITCH
+    // Use the Switch minus button as the application's quit button.
+    if (m_Input.GetDirectInput().IsSwitchMinusPressed())
+    {
+        FinishGameMode ();
+        StartGameMode (GAMEMODE_EXIT);
+        return;
+    }
+#endif
     
     //! If the menu yes/no is not active
     if (!m_MenuYesNo.IsActive())
@@ -1017,6 +1063,13 @@ void CGame::StartGameMode (EGameMode GameMode)
     // If we don't have to exit the game
     else
     {
+        // Persist the selected game configuration before entering gameplay.
+        // This mirrors the normal shutdown save and ensures the latest
+        // settings survive a crash or an unexpected power-off during a
+        // match.
+        if (m_GameMode == GAMEMODE_MATCH)
+            m_Options.SaveBeforeExit ();
+
         // Create the object corresponding to the new game mode
         if (GetGameModeObject(m_GameMode) != NULL)
             GetGameModeObject(m_GameMode)->Create ();
@@ -1318,11 +1371,8 @@ void CGame::OnSize (WPARAM wParam, LPARAM lParam)
 void CGame::OnJoystickAxis (WPARAM wParam, LPARAM lParam)
 {
 	SDL_JoyAxisEvent *jaxis;
-	SDL_Event *event;
 	
 	if (wParam != 0) jaxis = (SDL_JoyAxisEvent *)wParam;
-    else return;
-	if (lParam != 0) event = (SDL_Event *)lParam;
     else return;
 	
 	CMainInput m_pMainInput = m_Input.GetMainInput();
@@ -1341,6 +1391,13 @@ void CGame::OnJoystickAxis (WPARAM wParam, LPARAM lParam)
 	// update player input (for each player with keyboard)
 	CPlayerInput m_pPlayerInput;
 	int i = NUMBER_OF_KEYBOARD_CONFIGURATIONS + jaxis->which;
+
+    // SDL can deliver a late event for a joystick that has already been
+    // removed. Do not pass an invalid device index to CInput.
+    if (i < 0 || i >= m_Input.GetPlayerInputCount())
+    {
+        return;
+    }
 	
 	m_pPlayerInput = m_Input.GetPlayerInput(i);
 	m_pDirectInput = m_pPlayerInput.GetDirectInput();
@@ -1369,11 +1426,8 @@ void CGame::OnJoystickAxis (WPARAM wParam, LPARAM lParam)
 void CGame::OnJoystickButton (WPARAM wParam, LPARAM lParam)
 {
 	SDL_JoyButtonEvent *jbutton;
-	SDL_Event *event;
 	
 	if (wParam != 0) jbutton = (SDL_JoyButtonEvent *)wParam;
-    else return;
-	if (lParam != 0) event = (SDL_Event *)lParam;
     else return;
 	
 	CMainInput m_pMainInput = m_Input.GetMainInput();
@@ -1388,6 +1442,13 @@ void CGame::OnJoystickButton (WPARAM wParam, LPARAM lParam)
 	// update player input (for each player with keyboard)
 	CPlayerInput m_pPlayerInput;
 	int i = NUMBER_OF_KEYBOARD_CONFIGURATIONS + jbutton->which;
+
+    // SDL can deliver a late event for a joystick that has already been
+    // removed. Do not pass an invalid device index to CInput.
+    if (i < 0 || i >= m_Input.GetPlayerInputCount())
+    {
+        return;
+    }
 	
 	m_pPlayerInput = m_Input.GetPlayerInput(i);
 	m_pDirectInput = m_pPlayerInput.GetDirectInput();

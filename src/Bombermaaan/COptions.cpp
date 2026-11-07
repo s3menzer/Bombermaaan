@@ -50,6 +50,14 @@
 #define CONFIGURATION_KEYBOARD_4      3
 #define CONFIGURATION_KEYBOARD_5      4
 #define CONFIGURATION_JOYSTICK_1      5
+#define LEGACY_MAX_PLAYERS            5
+#define LEGACY_MAX_PLAYER_INPUT       10
+
+#ifdef BOMBERMAAAN_SWITCH
+#define CONFIGURATION_REVISION        7
+#else
+#define CONFIGURATION_REVISION        1
+#endif
 
 // This check ensures we've also set NUMBER_OF_KEYBOARD_CONFIGURATIONS in CInput.h appropriate
 #if NUMBER_OF_KEYBOARD_CONFIGURATIONS != CONFIGURATION_JOYSTICK_1
@@ -178,16 +186,30 @@ void COptions::SetDefaultValues(void)
     // Default display mode is windowed, not full-screen
     m_DisplayMode = DISPLAYMODE_WINDOWED;
 
-    // Set the bomber types
+    // Set the bomber types and initialise player inputs.
+    // Keep the additional player slots disabled by default until the user
+    // enables them in the bomber menu.
+    for (int i = 0 ; i < MAX_PLAYERS ; i++)
+    {
+        m_BomberType[i] = BOMBERTYPE_OFF;
+        m_PlayerInput[i] = CONFIGURATION_KEYBOARD_1 + i;
+    }
+
     m_BomberType[0] = BOMBERTYPE_MAN;
     m_BomberType[1] = BOMBERTYPE_MAN;
-    m_BomberType[2] = BOMBERTYPE_OFF;
-    m_BomberType[3] = BOMBERTYPE_OFF;
-    m_BomberType[4] = BOMBERTYPE_OFF;
 
-    // Initialise player inputs
-    for (int i = 0 ; i < MAX_PLAYERS ; i++)
-        m_PlayerInput[i] = CONFIGURATION_KEYBOARD_1 + i;
+#ifdef BOMBERMAAAN_SWITCH
+    // Expose all native Switch controller slots as the corresponding players.
+    // The desktop build keeps its original keyboard defaults.
+    for (int Player = 0; Player < MAX_PLAYERS; Player++)
+    {
+        m_PlayerInput[Player] = CONFIGURATION_JOYSTICK_1 + Player;
+    }
+    m_BomberType[0] = BOMBERTYPE_MAN;
+    m_BomberType[1] = BOMBERTYPE_MAN;
+    m_BomberType[2] = BOMBERTYPE_MAN;
+    m_BomberType[3] = BOMBERTYPE_MAN;
+#endif
 
     // Set default keyboard keys and joystick buttons
     m_Control[CONFIGURATION_KEYBOARD_1][CONTROL_UP]      = KEYBOARD_NUMPAD8;
@@ -251,6 +273,13 @@ void COptions::SetDefaultValues(void)
 
 bool COptions::LoadConfiguration (void)
 {
+#ifdef BOMBERMAAAN_SWITCH
+    // Older Switch configuration files predate the eight-controller input
+    // list. Reapply the existing first-four controller defaults once when
+    // such a file is encountered.
+    bool switchPlayerDefaultsNeedMigration = false;
+#endif
+
     // Try to open the old configuration file
     FILE* pConfigFile = fopen( oldconfigFileName.c_str(), "rb" );
 
@@ -266,13 +295,22 @@ bool COptions::LoadConfiguration (void)
         fread(&m_TimeStartSeconds, sizeof(int), 1, pConfigFile);
         fread(&m_DisplayMode, sizeof(EDisplayMode), 1, pConfigFile);
         fread(&m_BattleCount, sizeof(int), 1, pConfigFile);
-        fread(m_BomberType, sizeof(EBomberType), MAX_PLAYERS, pConfigFile);
-        fread(m_PlayerInput, sizeof(int), MAX_PLAYERS, pConfigFile);
-        fread(m_Control, sizeof(int), MAX_PLAYER_INPUT * NUM_CONTROLS, pConfigFile);
+        // The old binary format contained five player slots. Read only that
+        // portion so the newly added player slots retain their defaults.
+        fread(m_BomberType, sizeof(EBomberType), LEGACY_MAX_PLAYERS, pConfigFile);
+        fread(m_PlayerInput, sizeof(int), LEGACY_MAX_PLAYERS, pConfigFile);
+        // The binary format always contained five keyboard and five joystick
+        // configurations. Do not use the larger current Switch count here.
+        fread(m_Control, sizeof(int),
+              LEGACY_MAX_PLAYER_INPUT * NUM_CONTROLS, pConfigFile);
         fread(&m_Level, sizeof(int), 1, pConfigFile);
 
         // The configuration file is not needed anymore
         fclose( pConfigFile );
+
+#ifdef BOMBERMAAAN_SWITCH
+        switchPlayerDefaultsNeedMigration = true;
+#endif
     }
 
 
@@ -289,6 +327,11 @@ bool COptions::LoadConfiguration (void)
             confRevision->QueryIntAttribute( "value", &tempRevision );
 
         theLog.WriteLine( "Options         => Configuration file was successfully loaded and is at revision %d.", tempRevision );
+
+#ifdef BOMBERMAAAN_SWITCH
+        switchPlayerDefaultsNeedMigration =
+            tempRevision < CONFIGURATION_REVISION;
+#endif
 
         ReadIntFromXML( configDoc, "TimeUp", "minutes", &m_TimeUpMinutes );
         ReadIntFromXML( configDoc, "TimeUp", "seconds", &m_TimeUpSeconds );
@@ -361,6 +404,22 @@ bool COptions::LoadConfiguration (void)
 
     }
 
+#ifdef BOMBERMAAAN_SWITCH
+    if (switchPlayerDefaultsNeedMigration)
+    {
+        for (int Player = 0; Player < MAX_PLAYERS; Player++)
+            m_BomberType[Player] = BOMBERTYPE_OFF;
+
+        for (int Player = 0; Player < MAX_PLAYERS; Player++)
+            m_PlayerInput[Player] = CONFIGURATION_JOYSTICK_1 + Player;
+
+        for (int Player = 0; Player < 4; Player++)
+        {
+            m_BomberType[Player] = BOMBERTYPE_MAN;
+        }
+    }
+#endif
+
     //! We always return true since it doesn't matter if the configuration file could not be loaded
     // Success
     return true;
@@ -390,9 +449,9 @@ void COptions::WriteXMLData()
     TiXmlElement * config = new TiXmlElement( "Configuration" );
     root->LinkEndChild( config );
 
-    //! The revision number is currently 1
+    //! The revision number is platform-specific for controller defaults.
     TiXmlElement* configRev = new TiXmlElement( "ConfigRevision" );
-    configRev->SetAttribute( "value", 1 );
+    configRev->SetAttribute( "value", CONFIGURATION_REVISION );
     config->LinkEndChild( configRev );
 
     // TimeUp (when will arena close begin)

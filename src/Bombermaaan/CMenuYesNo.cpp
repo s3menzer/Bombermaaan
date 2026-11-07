@@ -37,9 +37,15 @@
 //******************************************************************************************************************************
 
 #ifdef USE_32_PIXELS_PER_BLOCK
-#define INITIAL_TEXT_POSITION_X     226     //!< Position X of the first option's text in the menu
+#define INITIAL_TEXT_POSITION_X     302     //!< Position X of the first option's text in the menu
+#define MENU_FRAME_POSITION_X      194
+#define TITLE_BORDER_LEFT           215     //!< Inner green popup border
+#define TITLE_BORDER_RIGHT          393
 #else
-#define INITIAL_TEXT_POSITION_X     103     //!< Position X of the first option's text in the menu
+#define INITIAL_TEXT_POSITION_X     150     //!< Position X of the first option's text in the menu
+#define MENU_FRAME_POSITION_X      42
+#define TITLE_BORDER_LEFT           63
+#define TITLE_BORDER_RIGHT          241
 #endif
 #define INITIAL_TEXT_POSITION_Y     117     //!< Position Y of the first option's text in the menu
 #define TEXT_SPACE_Y                15      //!< Space Y in pixels between two options text.
@@ -227,13 +233,15 @@ void CMenuYesNo::Display (void)
 
         // Draw the menu frame sprite
 #ifdef USE_32_PIXELS_PER_BLOCK
-        m_pDisplay->DrawSprite (164, 73, NULL, NULL, 39, 0, 800, -1);
+        m_pDisplay->DrawSprite (MENU_FRAME_POSITION_X, 73, NULL, NULL, 39, 0, 800, -1);
 #else
-        m_pDisplay->DrawSprite (43, 73, NULL, NULL, 39, 0, 800, -1);
+        m_pDisplay->DrawSprite (MENU_FRAME_POSITION_X, 73, NULL, NULL, 39, 0, 800, -1);
 #endif
 
         m_Font.SetTextColor (FONTCOLOR_WHITE);
-        m_Font.DrawCenteredX (0, VIEW_WIDTH, 93, m_Title);
+        // Center the title inside the yes/no popup, not across the complete
+        // 32-pixel game view.
+        m_Font.DrawCenteredX (TITLE_BORDER_LEFT, TITLE_BORDER_RIGHT, 93, m_Title);
     
         m_pDisplay->DrawSprite (INITIAL_TEXT_POSITION_X + CURSOR_HAND_SPACE_X,
                                 INITIAL_TEXT_POSITION_Y + (m_YesNo ? 0 : TEXT_SPACE_Y) + CURSOR_HAND_SPACE_Y,

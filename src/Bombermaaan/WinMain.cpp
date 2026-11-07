@@ -28,6 +28,53 @@
 #include "STDAFX.H"
 #include "CGame.h"
 
+#ifdef BOMBERMAAAN_SWITCH
+#include <switch.h>
+#include <string>
+#include <unistd.h>
+
+namespace
+{
+    std::string directoryOf(const char* path)
+    {
+        if (path == NULL || path[0] == '\0')
+            return ".";
+
+        const std::string value(path);
+        const std::string::size_type slash = value.find_last_of("/\\");
+        if (slash == std::string::npos)
+            return ".";
+        if (slash == 0)
+            return "/";
+        return value.substr(0, slash);
+    }
+
+    bool restoreWorkingDirectory(int argc, char** argv)
+    {
+        // hbloader passes the selected NRO as argv[1].  The launcher uses
+        // that argument to pass the absolute game.nro path to this process,
+        // so prefer it over argv[0], which may identify hbmenu instead.
+        const char* executablePath = NULL;
+        if (argc > 1 && argv != NULL && argv[1] != NULL &&
+            argv[1][0] != '\0')
+        {
+            executablePath = argv[1];
+        }
+        else if (argc > 0 && argv != NULL && argv[0] != NULL &&
+                 argv[0][0] != '\0')
+        {
+            executablePath = argv[0];
+        }
+
+        if (executablePath == NULL)
+            return false;
+
+        const std::string directory = directoryOf(executablePath);
+        return directory == "." || chdir(directory.c_str()) == 0;
+    }
+}
+#endif
+
 /**
  *  \mainpage Bombermaaan source code documentation
  *
@@ -51,12 +98,19 @@ int APIENTRY WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdl
 int main (int argc, char **argv)
 #endif
 {
+#ifdef BOMBERMAAAN_SWITCH
+    fsdevMountSdmc();
+    restoreWorkingDirectory(argc, argv);
+    if (romfsInit() != 0)
+        return false;
+#endif
+
 #ifndef WIN32
     HINSTANCE hInstance = 0;
     char **lpCmdline = argv;
 #endif
-	
-    // Create the CGame instance    
+
+    // Create the CGame instance
     CGame Game (hInstance, lpCmdline);
 
     // If creating the game failed
@@ -67,6 +121,9 @@ int main (int argc, char **argv)
 #endif
     {
         // Get out, failure
+#ifdef BOMBERMAAAN_SWITCH
+        romfsExit();
+#endif
         return false;
     }
 
@@ -80,6 +137,9 @@ int main (int argc, char **argv)
     Game.Destroy ();
 
     // Everything went right
+#ifdef BOMBERMAAAN_SWITCH
+    romfsExit();
+#endif
     return true;
 }
 

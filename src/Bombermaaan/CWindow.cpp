@@ -54,14 +54,14 @@ static LRESULT CALLBACK DefaultWinProc (HWND hwnd, unsigned int msg, WPARAM wPar
     LPCREATESTRUCT lpcs;
     CWindow *pWindow;
 
-    pWindow = (CWindow *)GetWindowLong (hwnd, 0);  // Pointer to the (C++ object that is the) window.
+    pWindow = reinterpret_cast<CWindow *>(GetWindowLongPtr (hwnd, 0));  // Pointer to the (C++ object that is the) window.
     if (!pWindow)       // Not stored yet ?
     {
         if (msg == WM_CREATE)       // The window is being created !! lParam contains the CreateStruct.
         {
             lpcs = (LPCREATESTRUCT)lParam;
             pWindow = (CWindow *)lpcs->lpCreateParams;      // Get the CWindow * we stored during CreateWindowEx
-            SetWindowLong (hwnd, 0, (LONG)pWindow);
+            SetWindowLongPtr (hwnd, 0, reinterpret_cast<LONG_PTR>(pWindow));
 
             return pWindow->WinProc (msg, wParam, lParam);  // Call its WinProc
         } 
@@ -186,7 +186,7 @@ void CWindow::SetClientSize (int ClientWidth, int ClientHeight)
 #ifdef WIN32
     RECT rc;
     SetRect (&rc, 0, 0, ClientWidth, ClientHeight);
-    AdjustWindowRectEx (&rc, GetWindowStyle(m_hWnd), (int)GetMenu (m_hWnd), GetWindowExStyle (m_hWnd));
+        AdjustWindowRectEx (&rc, GetWindowStyle(m_hWnd), GetMenu (m_hWnd) != NULL, GetWindowExStyle (m_hWnd));
     SetWindowPos (m_hWnd, HWND_NOTOPMOST, 0, 0, rc.right - rc.left, rc.bottom - rc.top, SWP_NOMOVE);
 #endif
 }

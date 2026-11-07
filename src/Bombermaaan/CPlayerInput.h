@@ -76,6 +76,7 @@ private:
     char                m_ControlName [MAX_CONTROL_NAME_LENGTH];
                         
     void                CreateName (void);
+    bool                HasValidJoystick (void) const;
                         
 public:                 
                         

@@ -4,6 +4,7 @@
 	Version="9,00"
 	Name="RES32"
 	ProjectGUID="{C55A1706-1D17-4210-852B-FADC36A87ABA}"
+	RootNamespace="RES32"
 	TargetFrameworkVersion="131072"
 	>
 	<Platforms>

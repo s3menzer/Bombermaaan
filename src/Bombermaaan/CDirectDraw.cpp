@@ -202,7 +202,7 @@ bool CDirectDraw::Create (int Width, int Height, int Depth, bool FullScreen)
         // Resize the window to adjust the client area size
         RECT rc;
         SetRect (&rc, 0, 0, m_Width, m_Height);
-        AdjustWindowRectEx (&rc, GetWindowStyle(m_hWnd), (int)GetMenu (m_hWnd), GetWindowExStyle (m_hWnd));
+        AdjustWindowRectEx (&rc, GetWindowStyle(m_hWnd), GetMenu (m_hWnd) != NULL, GetWindowExStyle (m_hWnd));
         SetWindowPos (m_hWnd, HWND_NOTOPMOST, 0, 0, rc.right - rc.left, rc.bottom - rc.top, SWP_NOMOVE);
 
         // Get the rects of the viewport and screen bounds
@@ -828,7 +828,8 @@ bool CDirectDraw::LoadSprites (int SpriteTableWidth,
     HGDIOBJ hGdiObj = SelectObject (hdcSrc, hBitmap);
     
     // If it failed
-    if (hGdiObj == NULL || (DWORD)hGdiObj == GDI_ERROR)
+    if (hGdiObj == NULL ||
+        hGdiObj == reinterpret_cast<HGDIOBJ>(static_cast<INT_PTR>(GDI_ERROR)))
     {
         // Log failure
         theLog.WriteLine ("DirectDraw      => !!! Could not select the bitmap into the device context.");
@@ -1130,7 +1131,7 @@ void CDirectDraw::UpdateAll (void)
                 DWORD Result;
                 DWORD SourceColour;
                 DWORD DestColour = (r | g | b);
-                int register X, Y;
+                int X, Y;
                 LONG Pitch = ddsd.lPitch;
                 WORD Skip;
 

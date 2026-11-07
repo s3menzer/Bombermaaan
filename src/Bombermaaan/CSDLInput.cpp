@@ -32,7 +32,7 @@
 //******************************************************************************************************************************
 //******************************************************************************************************************************
 
-#define JOYSTICK_DEAD_ZONE      10          //!< Percentage of the dead zone to set for each joystick 
+#define JOYSTICK_DEAD_ZONE      10          //!< Percentage of the dead zone to set for each joystick
 #define JOYSTICK_MINIMUM_AXIS   -32768      //!< Minimum axis value to set for each joystick
 #define JOYSTICK_MAXIMUM_AXIS   +32767       //!< Maximum axis value to set for each joystick
 
@@ -45,6 +45,10 @@ CSDLInput::CSDLInput (void)
     m_hWnd = NULL;
     m_hInstance = NULL;
     m_Ready = false;
+    m_KeyboardOpened = false;
+#ifdef BOMBERMAAAN_SWITCH
+    m_SwitchGameControllerReady = false;
+#endif
 }
 
 //******************************************************************************************************************************
@@ -82,12 +86,67 @@ bool CSDLInput::Create (void)
     {
         // Reset the keyboard state
         memset (m_KeyState, 0, MAX_KEYS);
-        
+
         // Prepare the friendly name for each key
         MakeKeyFriendlyNames ();
 
+#ifdef BOMBERMAAAN_SWITCH
+        if (BombermaaanSDL2_InitGameController() != 0)
+        {
+            theLog.WriteLine ("SDLInput        => !!! Could not initialise SDL2 game-controller support.");
+            return false;
+        }
+
+        BombermaaanSDL2_EnableEvents ();
+
+        /*
+         * Keep eight slots used by the existing player configuration, but
+         * fill them from SDL2's logical controller devices. SDL2 performs the
+         * Joy-Con horizontal-layout normalization before exposing A/B and the
+         * d-pad buttons.
+         */
+        for (int Controller = 0;
+             Controller < SWITCH_CONTROLLER_COUNT;
+             Controller++)
+        {
+            SJoystick *pJoystick = new SJoystick;
+
+            if (pJoystick == NULL)
+            {
+                theLog.WriteLine ("SDLInput        => !!! Could not allocate memory for a Switch controller.");
+                return false;
+            }
+
+            memset (&pJoystick->State, 0, sizeof(pJoystick->State));
+            pJoystick->Opened = false;
+            pJoystick->pDevice = NULL;
+            pJoystick->pController = NULL;
+            m_pJoysticks.push_back (pJoystick);
+        }
+
+        int Controller = 0;
+        for (int Device = 0;
+             Device < BombermaaanSDL2_NumJoysticks() &&
+             Controller < SWITCH_CONTROLLER_COUNT;
+             Device++)
+        {
+            if (!BombermaaanSDL2_IsGameController (Device))
+                continue;
+
+            BombermaaanSDL2Controller *pController =
+                BombermaaanSDL2_Open (Device);
+            if (pController == NULL)
+                continue;
+
+            m_pJoysticks[Controller]->pController = pController;
+            theLog.WriteLine ("SDLInput        => An SDL2 game controller was added.");
+            Controller++;
+        }
+
+        m_SwitchGameControllerReady = true;
+#else
         // Create all joysticks that are installed on the system
-        for(int i=0; i < SDL_NumJoysticks(); i++ ) 
+        for(int i=0; i < SDL_NumJoysticks(); i++ )
         {
             SJoystick *pJoystick = new SJoystick;
 
@@ -95,14 +154,14 @@ bool CSDLInput::Create (void)
             {
                 // Log failure
                 theLog.WriteLine ("SDLInput        => !!! Could not allocate memory for a joystick.");
-            
+
                 // Get out
                 return false;
             }
 
             // Reset the joystick state
             memset (&pJoystick->State, 0, sizeof(pJoystick->State));
-            
+
             // The joystick is not opened yet
             pJoystick->Opened = false;
 
@@ -112,14 +171,15 @@ bool CSDLInput::Create (void)
             m_pJoysticks.push_back (pJoystick); // the joystick is not opened
 
             theLog.WriteLine ("SDLInput        => A joystick was added.");
-            
+
         }
-        
+#endif
+
         m_Ready = true;
     }
 
     SDL_JoystickEventState(SDL_ENABLE);
-    
+
     // Everything went right
     return true;
 }
@@ -135,22 +195,38 @@ void CSDLInput::Destroy (void)
         // Scan the joysticks that were created
         for (unsigned int Index = 0 ; Index < m_pJoysticks.size() ; Index++)
         {
+#ifdef BOMBERMAAAN_SWITCH
+            if (m_pJoysticks[Index]->pController != NULL)
+            {
+                BombermaaanSDL2_Close (
+                    m_pJoysticks[Index]->pController);
+                m_pJoysticks[Index]->pController = NULL;
+            }
+#endif
+
             // Release the joystick SDLinput device
-            SDL_JoystickClose(m_pJoysticks[Index]->pDevice);
+            if (m_pJoysticks[Index]->pDevice != NULL)
+                SDL_JoystickClose(m_pJoysticks[Index]->pDevice);
             m_pJoysticks[Index]->pDevice = NULL;
-            
+
             // Delete the joystick variable
             delete m_pJoysticks[Index];
 
             // Log we released a joystick
             theLog.WriteLine ("SDLInput        => A joystick was released.");
         }
-                    
-        // Remove the joystick pointers from the container 
+
+        // Remove the joystick pointers from the container
         m_pJoysticks.clear();
 
         // Log we released the SDLInput object
         theLog.WriteLine ("SDLInput        => SDLInput object was released.");
+
+        m_Ready = false;
+        m_KeyboardOpened = false;
+#ifdef BOMBERMAAAN_SWITCH
+        m_SwitchGameControllerReady = false;
+#endif
     }
 }
 
@@ -160,6 +236,9 @@ void CSDLInput::Destroy (void)
 
 bool CSDLInput::UpdateDevice (SDL_Joystick *pDevice, void *pState, int StateSize)
 {
+    (void) pDevice;
+    (void) pState;
+    (void) StateSize;
     return true;
 }
 
@@ -170,6 +249,9 @@ bool CSDLInput::UpdateDevice (SDL_Joystick *pDevice, void *pState, int StateSize
 
 void CSDLInput::UpdateKeyboard (void)
 {
+#ifdef BOMBERMAAAN_SWITCH
+    UpdateSwitchControllers ();
+#endif
 }
 
 //******************************************************************************************************************************
@@ -184,11 +266,140 @@ void CSDLInput::UpdateJoystick (int Joystick)
     // Check if the joystick is at least supposed to be opened
     ASSERT (m_pJoysticks[Joystick]->Opened);
 
+#ifdef BOMBERMAAAN_SWITCH
+    /*
+     * Switch controllers are sampled by UpdateKeyboard(), which is called
+     * once at the beginning of every game frame by CMainInput.
+     */
+    if (Joystick >= 0 &&
+        Joystick < SWITCH_CONTROLLER_COUNT &&
+        m_SwitchGameControllerReady)
+        return;
+#endif
+
     // Update the device and get the latest real opened state
-//    m_pJoysticks[Joystick]->Opened = UpdateDevice (m_pJoysticks[Joystick]->pDevice, 
-//                                                   &m_pJoysticks[Joystick]->State, 
+//    m_pJoysticks[Joystick]->Opened = UpdateDevice (m_pJoysticks[Joystick]->pDevice,
+//                                                   &m_pJoysticks[Joystick]->State,
 //                                                   sizeof(m_pJoysticks[Joystick]->State));
 }
+
+#ifdef BOMBERMAAAN_SWITCH
+//******************************************************************************************************************************
+//******************************************************************************************************************************
+//******************************************************************************************************************************
+
+void CSDLInput::UpdateSwitchControllers (void)
+{
+    if (!m_SwitchGameControllerReady || m_pJoysticks.empty())
+        return;
+
+    BombermaaanSDL2_Update ();
+
+    bool menuUp = false;
+    bool menuDown = false;
+    bool menuLeft = false;
+    bool menuRight = false;
+    bool menuNext = false;
+    bool menuBack = false;
+    const int menuStickThreshold = 1000;
+
+    for (int Controller = 0;
+         Controller < SWITCH_CONTROLLER_COUNT;
+         Controller++)
+    {
+        SJoystick *pJoystick = m_pJoysticks[Controller];
+        BombermaaanSDL2Controller *pController = pJoystick->pController;
+
+        memset (&pJoystick->State, 0, sizeof(pJoystick->State));
+
+        if (pController == NULL ||
+            !BombermaaanSDL2_GetAttached (pController))
+            continue;
+
+        const bool up =
+            BombermaaanSDL2_GetDpadUp(pController) != 0;
+        const bool down =
+            BombermaaanSDL2_GetDpadDown(pController) != 0;
+        const bool left =
+            BombermaaanSDL2_GetDpadLeft(pController) != 0;
+        const bool right =
+            BombermaaanSDL2_GetDpadRight(pController) != 0;
+        /*
+         * SDL2 exposes the physical face buttons using the standard
+         * controller names. Bombermaaan's existing Nintendo layout expects
+         * the opposite face-button order.
+         */
+        const bool action1 =
+            BombermaaanSDL2_GetB(pController) != 0;
+        const bool action2 =
+            BombermaaanSDL2_GetA(pController) != 0;
+        const bool action3 =
+            BombermaaanSDL2_GetY(pController) != 0;
+        const bool action4 =
+            BombermaaanSDL2_GetX(pController) != 0;
+
+        int axisX = BombermaaanSDL2_GetLeftX(pController);
+        int axisY = BombermaaanSDL2_GetLeftY(pController);
+
+        const bool stickUp = axisY < -menuStickThreshold;
+        const bool stickDown = axisY > menuStickThreshold;
+        const bool stickLeft = axisX < -menuStickThreshold;
+        const bool stickRight = axisX > menuStickThreshold;
+
+        const bool inputUp = up || stickUp;
+        const bool inputDown = down || stickDown;
+        const bool inputLeft = left || stickLeft;
+        const bool inputRight = right || stickRight;
+
+        // D-pad directions take precedence over the analog stick.
+        if (inputLeft)  axisX = JOYSTICK_MINIMUM_AXIS;
+        if (inputRight) axisX = JOYSTICK_MAXIMUM_AXIS;
+        if (inputUp)    axisY = JOYSTICK_MINIMUM_AXIS;
+        if (inputDown)  axisY = JOYSTICK_MAXIMUM_AXIS;
+
+        pJoystick->State.lX = axisX;
+        pJoystick->State.lY = axisY;
+        pJoystick->State.rgbButtons[0] = action1 ? 0x80 : 0;
+        pJoystick->State.rgbButtons[1] = action2 ? 0x80 : 0;
+        pJoystick->State.rgbButtons[2] = action3 ? 0x80 : 0;
+        pJoystick->State.rgbButtons[3] = action4 ? 0x80 : 0;
+
+        menuUp = menuUp || inputUp;
+        menuDown = menuDown || inputDown;
+        menuLeft = menuLeft || inputLeft;
+        menuRight = menuRight || inputRight;
+        menuNext = menuNext || action1;
+        menuBack = menuBack || action2;
+    }
+
+    /*
+     * Feed the old keyboard-based menu/player code as well as the joystick
+     * state. This keeps existing configuration files usable and allows any
+     * connected controller to operate the menus.
+     */
+    SetKey(KEYBOARD_UP, menuUp);
+    SetKey(KEYBOARD_DOWN, menuDown);
+    SetKey(KEYBOARD_LEFT, menuLeft);
+    SetKey(KEYBOARD_RIGHT, menuRight);
+    SetKey(KEYBOARD_RETURN, menuNext);
+    SetKey(KEYBOARD_NUMPADENTER, menuNext);
+    SetKey(KEYBOARD_SPACE, menuNext);
+    SetKey(KEYBOARD_BACK, menuBack);
+
+    // Default keyboard configuration #1 (numpad movement, PageUp/Home action).
+    SetKey(KEYBOARD_NUMPAD8, menuUp);
+    SetKey(KEYBOARD_NUMPAD5, menuDown);
+    SetKey(KEYBOARD_NUMPAD4, menuLeft);
+    SetKey(KEYBOARD_NUMPAD6, menuRight);
+    SetKey(KEYBOARD_PRIOR, menuNext);
+    SetKey(KEYBOARD_HOME, menuBack);
+
+    // Default keyboard configuration #5 (cursor movement, Ctrl/Shift action).
+    SetKey(KEYBOARD_RCONTROL, menuNext);
+    SetKey(KEYBOARD_RSHIFT, menuBack);
+}
+#endif
+
 
 //******************************************************************************************************************************
 //******************************************************************************************************************************
@@ -197,7 +408,7 @@ void CSDLInput::UpdateJoystick (int Joystick)
 void CSDLInput::MakeKeyFriendlyNames (void)
 {
     int c;
-    
+
     for (int Key = 0 ; Key < MAX_KEYS ; Key++)
     {
         switch (Key)
@@ -314,7 +525,7 @@ void CSDLInput::MakeKeyFriendlyNames (void)
                     m_KeyFriendlyName[Key][sizeof(m_KeyFriendlyName[Key])-1] = '\0';
                 else
                     m_KeyFriendlyName[Key][c] = '\0';
-                
+
                 break;
         }
     }

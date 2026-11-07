@@ -49,18 +49,18 @@
 #define DRAWGAME_MAIN_POSITION_X        0       //!< Position of the main sprite from draw game screen origin
 #define DRAWGAME_MAIN_POSITION_Y        0       
 #ifdef USE_32_PIXELS_PER_BLOCK
-#define DRAWGAME_FLAG_POSITION_X        250     //!< Position where to draw the animated flag
+#define DRAWGAME_FLAG_POSITION_X        314     //!< Position where to draw the animated flag
 #define DRAWGAME_FLAG_POSITION_Y        178     
-#define DRAWGAME_BIGFUME_POSITION_X     310     //!< Position of the big fume
+#define DRAWGAME_BIGFUME_POSITION_X     374     //!< Position of the big fume
 #define DRAWGAME_BIGFUME_POSITION_Y     180     
-#define DRAWGAME_SMALLFUME_POSITION_X   142     //!< Position of the small fume
+#define DRAWGAME_SMALLFUME_POSITION_X   206     //!< Position of the small fume
 #define DRAWGAME_SMALLFUME_POSITION_Y   222
 #else
-#define DRAWGAME_FLAG_POSITION_X        125     //!< Position where to draw the animated flag
+#define DRAWGAME_FLAG_POSITION_X        157     //!< Position where to draw the animated flag
 #define DRAWGAME_FLAG_POSITION_Y        89      
-#define DRAWGAME_BIGFUME_POSITION_X     155     //!< Position of the big fume
+#define DRAWGAME_BIGFUME_POSITION_X     187     //!< Position of the big fume
 #define DRAWGAME_BIGFUME_POSITION_Y     90      
-#define DRAWGAME_SMALLFUME_POSITION_X   71      //!< Position of the small fume
+#define DRAWGAME_SMALLFUME_POSITION_X   103     //!< Position of the small fume
 #define DRAWGAME_SMALLFUME_POSITION_Y   111
 #endif
 

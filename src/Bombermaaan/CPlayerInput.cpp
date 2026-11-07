@@ -52,6 +52,17 @@ CPlayerInput::~CPlayerInput (void)
     // Nothing to do
 }
 
+bool CPlayerInput::HasValidJoystick (void) const
+{
+    if (m_pDirectInput == NULL ||
+        m_PlayerInput < NUMBER_OF_KEYBOARD_CONFIGURATIONS)
+        return false;
+
+    int Joystick = m_PlayerInput - NUMBER_OF_KEYBOARD_CONFIGURATIONS;
+    return Joystick >= 0 &&
+           Joystick < m_pDirectInput->GetJoystickCount();
+}
+
 //******************************************************************************************************************************
 //******************************************************************************************************************************
 //******************************************************************************************************************************
@@ -77,13 +88,26 @@ void CPlayerInput::CreateName (void)
     if (m_PlayerInput < NUMBER_OF_KEYBOARD_CONFIGURATIONS)
     {
         // Make a name for the specified keyboard configuration
-        sprintf (m_Name, "KEYBOARD %d", m_PlayerInput + 1);
+        static const char *KeyboardNames[NUMBER_OF_KEYBOARD_CONFIGURATIONS] =
+        {
+            "KEYBOARD 1",
+            "KEYBOARD 2",
+            "KEYBOARD 3",
+            "KEYBOARD 4",
+            "KEYBOARD 5"
+        };
+        strcpy (m_Name, KeyboardNames[m_PlayerInput]);
     }
     // If the player input is a joystick
     else
     {
         // Make a name for the specified joystick configuration
-        sprintf (m_Name, "JOYSTICK %d", m_PlayerInput - NUMBER_OF_KEYBOARD_CONFIGURATIONS + 1);
+        unsigned int JoystickNumber =
+            (unsigned int)(m_PlayerInput - NUMBER_OF_KEYBOARD_CONFIGURATIONS + 1);
+        // Keep the label within MAX_PLAYER_INPUT_NAME_LENGTH even if a
+        // corrupted configuration contains an unreasonable device number.
+        JoystickNumber %= 1000000U;
+        snprintf (m_Name, sizeof (m_Name), "JOYSTICK %u", JoystickNumber);
     }
 }
 
@@ -102,6 +126,9 @@ void CPlayerInput::Destroy (void)
 
 void CPlayerInput::Open (void)
 {   
+    if (m_pDirectInput == NULL)
+        return;
+
     // If the player input is one of the keyboard configurations
     if (m_PlayerInput < NUMBER_OF_KEYBOARD_CONFIGURATIONS)
     {
@@ -111,6 +138,9 @@ void CPlayerInput::Open (void)
     // If the player input is a joystick
     else
     {
+        if (!HasValidJoystick())
+            return;
+
         // Get access to the specified joystick
         m_pDirectInput->OpenJoystick (m_PlayerInput - NUMBER_OF_KEYBOARD_CONFIGURATIONS);
     }
@@ -122,6 +152,9 @@ void CPlayerInput::Open (void)
 
 bool CPlayerInput::IsOpened (void)
 {
+    if (m_pDirectInput == NULL)
+        return false;
+
     // If the player input is one of the keyboard configurations
     if (m_PlayerInput < NUMBER_OF_KEYBOARD_CONFIGURATIONS)
     {
@@ -131,6 +164,9 @@ bool CPlayerInput::IsOpened (void)
     // If the player input is a joystick
     else
     {
+        if (!HasValidJoystick())
+            return false;
+
         // Return whether the specified joystick is opened or not
         return m_pDirectInput->IsJoystickOpened (m_PlayerInput - NUMBER_OF_KEYBOARD_CONFIGURATIONS);
     }
@@ -142,6 +178,9 @@ bool CPlayerInput::IsOpened (void)
 
 void CPlayerInput::Close (void)
 {
+    if (m_pDirectInput == NULL)
+        return;
+
     // If the player input is one of the keyboard configurations
     if (m_PlayerInput < NUMBER_OF_KEYBOARD_CONFIGURATIONS)
     {
@@ -151,6 +190,9 @@ void CPlayerInput::Close (void)
     // If the player input is a joystick
     else
     {   
+        if (!HasValidJoystick())
+            return;
+
         // Release access to the specified joystick
         m_pDirectInput->CloseJoystick (m_PlayerInput - NUMBER_OF_KEYBOARD_CONFIGURATIONS);
     }
@@ -162,6 +204,9 @@ void CPlayerInput::Close (void)
 
 void CPlayerInput::Update (void)
 {
+    if (m_pDirectInput == NULL)
+        return;
+
     // If the player input is one of the keyboard configurations
     if (m_PlayerInput < NUMBER_OF_KEYBOARD_CONFIGURATIONS)
     {
@@ -171,6 +216,9 @@ void CPlayerInput::Update (void)
     // If the player input is a joystick
     else
     {   
+        if (!HasValidJoystick())
+            return;
+
         // Update the state of the specified joystick
         m_pDirectInput->UpdateJoystick (m_PlayerInput - NUMBER_OF_KEYBOARD_CONFIGURATIONS);
     }
@@ -182,6 +230,9 @@ void CPlayerInput::Update (void)
 
 int CPlayerInput::GetActivatedControl (void)
 {
+    if (m_pDirectInput == NULL)
+        return NO_ACTIVATED_CONTROL;
+
     // If the player input is one of the keyboard configurations
     if (m_PlayerInput < NUMBER_OF_KEYBOARD_CONFIGURATIONS)
     {
@@ -196,6 +247,9 @@ int CPlayerInput::GetActivatedControl (void)
     // If the player input is a joystick
     else
     {
+        if (!HasValidJoystick())
+            return NO_ACTIVATED_CONTROL;
+
         int AxisX = m_pDirectInput->GetJoystickAxisX (m_PlayerInput - NUMBER_OF_KEYBOARD_CONFIGURATIONS);
         int AxisY = m_pDirectInput->GetJoystickAxisY (m_PlayerInput - NUMBER_OF_KEYBOARD_CONFIGURATIONS);
 
@@ -269,6 +323,9 @@ const char* CPlayerInput::GetControlName (int Control)
 
 bool CPlayerInput::TestControl (int Control)
 {
+    if (m_pDirectInput == NULL)
+        return false;
+
     // If the player input is one of the keyboard configurations
     if (m_PlayerInput < NUMBER_OF_KEYBOARD_CONFIGURATIONS)
     {
@@ -278,6 +335,9 @@ bool CPlayerInput::TestControl (int Control)
     // If the player input is a joystick
     else
     {
+        if (!HasValidJoystick())
+            return false;
+
         int OptControl = m_pOptions->GetControl(m_PlayerInput, Control);
         if (OptControl < NUMBER_OF_JOYSTICK_DIRECTIONS)
         {
@@ -313,6 +373,9 @@ bool CPlayerInput::TestControl (int Control)
 
 bool CPlayerInput::TestMenuControl (int MenuControl)
 {
+    if (!HasValidJoystick())
+        return false;
+
     // If the player input is one of the keyboard configurations, leave!
     // This function is only for joystick control. Keyboard controls are handled by MainInput.
     if (m_PlayerInput < NUMBER_OF_KEYBOARD_CONFIGURATIONS)

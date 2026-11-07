@@ -42,15 +42,17 @@
 
 #ifdef USE_32_PIXELS_PER_BLOCK
 #define TITLE_TEXT_POSITION_Y       90      //!< Position Y of the title text that is centered on the X axis
+#define MENU_CONTENT_OFFSET_X       64
 #else
 #define TITLE_TEXT_POSITION_Y       45      //!< Position Y of the title text that is centered on the X axis
+#define MENU_CONTENT_OFFSET_X       32
 #endif
 
 #ifdef USE_32_PIXELS_PER_BLOCK
-#define INITIAL_TEXT_POSITION_X     191     //!< Initial position of the text "BOMBER"
+#define INITIAL_TEXT_POSITION_X     (191 + MENU_CONTENT_OFFSET_X) //!< Initial position of the text "BOMBER"
 #define INITIAL_TEXT_POSITION_Y     (77+90)
 #else
-#define INITIAL_TEXT_POSITION_X     91      //!< Initial position of the text "BOMBER"
+#define INITIAL_TEXT_POSITION_X     (91 + MENU_CONTENT_OFFSET_X) //!< Initial position of the text "BOMBER"
 #define INITIAL_TEXT_POSITION_Y     77
 #endif
 #define TYPE_TEXT_SPACE_X           75      //!< X Space in pixels between the "BOMBER" text X position and the type's text X position
@@ -334,7 +336,7 @@ void CMenuBomber::OnDisplay (void)
                                 NULL,
                                 NULL,
                                 BOMBER_HEAD_SPRITE_TABLE,
-                                Player + (m_Blinking[Player] ? MAX_PLAYERS : 0), // Blinking bomber head sprite or not
+                                (Player % PLAYER_COLOR_COUNT) + (m_Blinking[Player] ? PLAYER_COLOR_COUNT : 0), // Blinking bomber head sprite or not
                                 MENUBOMBER_SPRITELAYER,
                                 BOMBER_HEAD_PRIORITY);
 

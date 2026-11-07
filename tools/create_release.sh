@@ -175,7 +175,7 @@ echo Creating $RELEASETYPE binary release package folder for version $VERSION, r
 mkdir "$TARGETDIR"                                                              || error "Mkdir ended with return code $?."
 
 mkdir "$TARGETDIR/Levels"                                                       || error "Mkdir ended with return code $?."
-cp ../../src/_Test_/Release/Levels/L*.TXT "$TARGETDIR/Levels/."                 || error "Copy ended with return code $?."
+cp ../../levels/L*.TXT "$TARGETDIR/Levels/." || error "Copy ended with return code $?."
 
 if [ "$SYSTEM" = "Linux" ] ; then
     cp ../../src/Bombermaaan/Bombermaaan        "$TARGETDIR/."                  || error "Copy ended with return code $?."
@@ -183,8 +183,8 @@ if [ "$SYSTEM" = "Linux" ] ; then
 else
     if [ "$RELEASETYPE" = "experimental" ] ; then
         # Experimental release: only the 32-pixels version is distributed
-        cp ../../src/_Test_/Release/Bombermaaan.exe        "$TARGETDIR/."           || error "Copy ended with return code $?."
-        cp ../../src/_Test_/Release/Bombermaaan_32.dll        "$TARGETDIR/."        || error "Copy ended with return code $?."
+        cp ../../build-windows/Bombermaaan-windows/Bombermaaan.exe        "$TARGETDIR/."           || error "Copy ended with return code $?."
+        cp ../../build-windows/Bombermaaan-windows/Bombermaaan_32.dll        "$TARGETDIR/."        || error "Copy ended with return code $?."
     else
         # Stable release: distribute both 16- and 32-pixels version
         # The files have to be renamed manually to ..._16.exe and ..._32.exe
@@ -192,10 +192,10 @@ else
         # Change file STDAFX.H: comment define USE_32_PIXELS_PER_BLOCK and rebuild solution
         # Rename output file Bombermaaan.exe to Bombermaaan_16.exe
         # Run this script again
-        cp ../../src/_Test_/Release/Bombermaaan_16.exe        "$TARGETDIR/."        || error "Copy ended with return code $?."
-        cp ../../src/_Test_/Release/Bombermaaan_32.exe        "$TARGETDIR/."        || error "Copy ended with return code $?."
-        cp ../../src/_Test_/Release/Bombermaaan.dll        "$TARGETDIR/."           || error "Copy ended with return code $?."
-        cp ../../src/_Test_/Release/Bombermaaan_32.dll        "$TARGETDIR/."        || error "Copy ended with return code $?."
+        cp ../../build-windows/Bombermaaan-windows/Bombermaaan_16.exe        "$TARGETDIR/."        || error "Copy ended with return code $?."
+        cp ../../build-windows/Bombermaaan-windows/Bombermaaan_32.exe        "$TARGETDIR/."        || error "Copy ended with return code $?."
+        cp ../../build-windows/Bombermaaan-windows/Bombermaaan.dll        "$TARGETDIR/."           || error "Copy ended with return code $?."
+        cp ../../build-windows/Bombermaaan-windows/Bombermaaan_32.dll        "$TARGETDIR/."        || error "Copy ended with return code $?."
     fi
 fi
 
@@ -209,9 +209,9 @@ if [ "$SYSTEM" = "Linux" ] ; then
     echo -e "#!/bin/sh\nLD_LIBRARY_PATH=. ./Bombermaaan\n" > "$TARGETDIR/run-bm"    || error "Create of start script ended with return code $?."
     chmod u+x "$TARGETDIR/run-bm"                                                   || error "Chmod ended with return code $?."
 else
-    cp ../../src/_Test_/Release/libogg*.dll            "$TARGETDIR/."               || error "Copy ended with return code $?."
-    cp ../../src/_Test_/Release/libvorbis*.dll         "$TARGETDIR/."               || error "Copy ended with return code $?."
-    cp ../../src/_Test_/Release/SDL*.dll               "$TARGETDIR/."               || error "Copy ended with return code $?."
+    cp ../../build-windows/Bombermaaan-windows/libogg*.dll            "$TARGETDIR/."               || error "Copy ended with return code $?."
+    cp ../../build-windows/Bombermaaan-windows/libvorbis*.dll         "$TARGETDIR/."               || error "Copy ended with return code $?."
+    cp ../../build-windows/Bombermaaan-windows/SDL*.dll               "$TARGETDIR/."               || error "Copy ended with return code $?."
 fi
 
 #

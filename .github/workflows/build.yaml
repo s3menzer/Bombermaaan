@@ -1,0 +1,135 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # Set PRIVATE_REPO_TOKEN when src/updater is private. github.token is enough
+  # when the submodule and its nested dependencies are public.
+  CHECKOUT_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN || github.token }}
+
+jobs:
+  build-linux:
+    name: Build Linux
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ env.CHECKOUT_TOKEN }}
+          persist-credentials: true
+          fetch-depth: 1
+
+      - name: Checkout submodules
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config --global --replace-all \
+            url."https://github.com/".insteadOf "git@github.com:"
+          git config --global --add \
+            url."https://github.com/".insteadOf "ssh://git@github.com/"
+          git -C "$GITHUB_WORKSPACE" submodule sync --recursive
+          git -C "$GITHUB_WORKSPACE" -c protocol.version=2 \
+            submodule update --init --force --recursive --depth=1
+
+      - name: Build Linux
+        shell: bash
+        run: bash scripts/docker-build-linux.sh
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bombermaaan-linux
+          path: build-linux/*.zip
+          if-no-files-found: error
+
+  build-windows:
+    name: Build Windows
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ env.CHECKOUT_TOKEN }}
+          persist-credentials: true
+          fetch-depth: 1
+
+      - name: Install MinGW and SDL dependencies
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            make
+            zip
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-SDL
+            mingw-w64-x86_64-SDL_mixer
+
+      - name: Build and package Windows
+        shell: msys2 {0}
+        run: IN_CONTAINER=1 bash scripts/docker-build-windows.sh
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bombermaaan-windows
+          path: build-windows/*.zip
+          if-no-files-found: error
+
+  build-switch:
+    name: Build Nintendo Switch
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ env.CHECKOUT_TOKEN }}
+          persist-credentials: true
+          fetch-depth: 1
+
+      - name: Checkout submodules
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config --global --replace-all \
+            url."https://github.com/".insteadOf "git@github.com:"
+          git config --global --add \
+            url."https://github.com/".insteadOf "ssh://git@github.com/"
+          git -C "$GITHUB_WORKSPACE" submodule sync --recursive
+          git -C "$GITHUB_WORKSPACE" -c protocol.version=2 \
+            submodule update --init --force --recursive --depth=1
+
+      - name: Build Switch in devkitPro container
+        shell: bash
+        run: |
+          set -euo pipefail
+          CONTAINER_USE_HOST_USER=1 \
+            bash scripts/docker-build-switch.sh
+
+      - name: Collect Switch artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p Bombermaaan-switch
+          cp src/native-switch/{Bombermaaan.nro,game.nro,Bombermaaan.json,Bombermaaan.nacp} \
+            Bombermaaan-switch/
+          cp src/native-switch/Bombermaaan-icon.png Bombermaaan-switch/
+          (cd Bombermaaan-switch && zip -q ../Bombermaaan-switch.zip ./*)
+
+      - name: Upload Switch artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bombermaaan-switch
+          path: Bombermaaan-switch.zip
+          if-no-files-found: error

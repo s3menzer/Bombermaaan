@@ -30,6 +30,11 @@
 
 #include "SDL.h"
 
+#ifdef BOMBERMAAAN_SWITCH
+#include "SDL2Controller.h"
+#define SWITCH_CONTROLLER_COUNT 8
+#endif
+
 //******************************************************************************************************************************
 //******************************************************************************************************************************
 //******************************************************************************************************************************
@@ -163,6 +168,9 @@ typedef struct SDLJOYSTATE {
 struct SJoystick
 {
     SDL_Joystick    *pDevice;        //!< Pointer on the SDLInput input device
+#ifdef BOMBERMAAAN_SWITCH
+    BombermaaanSDL2Controller *pController; //!< SDL2 logical controller on Switch
+#endif
     SDLJOYSTATE      State;          //!< Most recent state of the joystick, filled on last update (has been DIJOYSTATE)
     bool             Opened;         //!< Is the joystick _supposed_ to be opened? Updated on each general update.
 };
@@ -184,6 +192,12 @@ private:
     char                    m_KeyFriendlyName [MAX_KEYS][MAX_PATH]; //!< More friendly name for each key
 
     vector<SJoystick*>      m_pJoysticks;   //!< All joystick SDLInput devices installed in the system
+
+#ifdef BOMBERMAAAN_SWITCH
+    bool                    m_SwitchGameControllerReady;
+
+    void                    UpdateSwitchControllers (void);
+#endif
 
     bool                    UpdateDevice (SDL_Joystick *pDevice, void *pState, int StateSize);
     void                    MakeKeyFriendlyNames (void);
@@ -214,6 +228,9 @@ public:
     inline void             SetJoystickAxisX    (int Joystick, int AxisX);
     inline void             SetJoystickAxisY    (int Joystick, int AxisY);
     inline void             SetJoystickButton   (int Joystick, int Button, bool onoff);
+#ifdef BOMBERMAAAN_SWITCH
+    inline bool             IsSwitchMinusPressed (void);
+#endif
 };
 
 typedef CSDLInput InputClass;
@@ -293,6 +310,15 @@ inline void CSDLInput::OpenJoystick (int Joystick)
     // Check if the joystick number is correct
     ASSERT (Joystick >= 0 && Joystick < (int)m_pJoysticks.size ());
 
+#ifdef BOMBERMAAAN_SWITCH
+    // Switch joysticks are backed by libnx rather than SDL devices.
+    if (Joystick >= 0 && Joystick < SWITCH_CONTROLLER_COUNT)
+    {
+        m_pJoysticks[Joystick]->Opened = true;
+        return;
+    }
+#endif
+
 	// Try to acquire the joystick
 	m_pJoysticks[Joystick]->pDevice = SDL_JoystickOpen(Joystick);
 	
@@ -314,8 +340,18 @@ inline void CSDLInput::CloseJoystick (int Joystick)
     // Check if the joystick number is correct
     ASSERT (Joystick >= 0 && Joystick < (int)m_pJoysticks.size ());
 
+#ifdef BOMBERMAAAN_SWITCH
+    // Switch joysticks are backed by libnx rather than SDL devices.
+    if (Joystick >= 0 && Joystick < SWITCH_CONTROLLER_COUNT)
+    {
+        m_pJoysticks[Joystick]->Opened = false;
+        return;
+    }
+#endif
+
     // Release access to this joystick
-	SDL_JoystickClose(m_pJoysticks[Joystick]->pDevice);
+	if (m_pJoysticks[Joystick]->pDevice != NULL)
+	    SDL_JoystickClose(m_pJoysticks[Joystick]->pDevice);
 
     // We are sure this joystick is not opened */
     m_pJoysticks[Joystick]->Opened = false;
@@ -392,6 +428,29 @@ inline void CSDLInput::SetJoystickButton (int Joystick, int Button, bool onoff)
 
     return;
 }
+
+#ifdef BOMBERMAAAN_SWITCH
+inline bool CSDLInput::IsSwitchMinusPressed (void)
+{
+    if (!m_SwitchGameControllerReady)
+        return false;
+
+    for (int Controller = 0;
+         Controller < SWITCH_CONTROLLER_COUNT;
+         Controller++)
+    {
+        BombermaaanSDL2Controller* pController =
+            m_pJoysticks[Controller]->pController;
+
+        if (pController != NULL &&
+            BombermaaanSDL2_GetAttached(pController) &&
+            BombermaaanSDL2_GetBack(pController) != 0)
+            return true;
+    }
+
+    return false;
+}
+#endif
 
 //******************************************************************************************************************************
 //******************************************************************************************************************************
