@@ -88,13 +88,26 @@ void CPlayerInput::CreateName (void)
     if (m_PlayerInput < NUMBER_OF_KEYBOARD_CONFIGURATIONS)
     {
         // Make a name for the specified keyboard configuration
-        sprintf (m_Name, "KEYBOARD %d", m_PlayerInput + 1);
+        static const char *KeyboardNames[NUMBER_OF_KEYBOARD_CONFIGURATIONS] =
+        {
+            "KEYBOARD 1",
+            "KEYBOARD 2",
+            "KEYBOARD 3",
+            "KEYBOARD 4",
+            "KEYBOARD 5"
+        };
+        strcpy (m_Name, KeyboardNames[m_PlayerInput]);
     }
     // If the player input is a joystick
     else
     {
         // Make a name for the specified joystick configuration
-        sprintf (m_Name, "JOYSTICK %d", m_PlayerInput - NUMBER_OF_KEYBOARD_CONFIGURATIONS + 1);
+        unsigned int JoystickNumber =
+            (unsigned int)(m_PlayerInput - NUMBER_OF_KEYBOARD_CONFIGURATIONS + 1);
+        // Keep the label within MAX_PLAYER_INPUT_NAME_LENGTH even if a
+        // corrupted configuration contains an unreasonable device number.
+        JoystickNumber %= 1000000U;
+        snprintf (m_Name, sizeof (m_Name), "JOYSTICK %u", JoystickNumber);
     }
 }
 

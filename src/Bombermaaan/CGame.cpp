@@ -1063,6 +1063,13 @@ void CGame::StartGameMode (EGameMode GameMode)
     // If we don't have to exit the game
     else
     {
+        // Persist the selected game configuration before entering gameplay.
+        // This mirrors the normal shutdown save and ensures the latest
+        // settings survive a crash or an unexpected power-off during a
+        // match.
+        if (m_GameMode == GAMEMODE_MATCH)
+            m_Options.SaveBeforeExit ();
+
         // Create the object corresponding to the new game mode
         if (GetGameModeObject(m_GameMode) != NULL)
             GetGameModeObject(m_GameMode)->Create ();
@@ -1364,11 +1371,8 @@ void CGame::OnSize (WPARAM wParam, LPARAM lParam)
 void CGame::OnJoystickAxis (WPARAM wParam, LPARAM lParam)
 {
 	SDL_JoyAxisEvent *jaxis;
-	SDL_Event *event;
 	
 	if (wParam != 0) jaxis = (SDL_JoyAxisEvent *)wParam;
-    else return;
-	if (lParam != 0) event = (SDL_Event *)lParam;
     else return;
 	
 	CMainInput m_pMainInput = m_Input.GetMainInput();
@@ -1422,11 +1426,8 @@ void CGame::OnJoystickAxis (WPARAM wParam, LPARAM lParam)
 void CGame::OnJoystickButton (WPARAM wParam, LPARAM lParam)
 {
 	SDL_JoyButtonEvent *jbutton;
-	SDL_Event *event;
 	
 	if (wParam != 0) jbutton = (SDL_JoyButtonEvent *)wParam;
-    else return;
-	if (lParam != 0) event = (SDL_Event *)lParam;
     else return;
 	
 	CMainInput m_pMainInput = m_Input.GetMainInput();

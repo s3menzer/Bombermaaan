@@ -499,8 +499,7 @@ void CSDLVideo::RemoveAllDebugRectangles ()
 
 void CSDLVideo::Clear ()
 {
-	HRESULT hRet;
-    hRet = SDL_FillRect(m_pPrimary, &m_rcViewport, 0);
+    (void)SDL_FillRect(m_pPrimary, &m_rcViewport, 0);
 }
 
 //******************************************************************************************************************************

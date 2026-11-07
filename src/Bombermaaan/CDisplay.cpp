@@ -167,7 +167,7 @@ bool CDisplay::Create (int Width, int Height, int Depth, bool FullScreen)
             !LoadSprites (1,      1,      69,     16,     true,     BMP_PAUSE                     ) ||
             !LoadSprites (1,      1,     105,     16,     true,     BMP_HURRY                     ) ||
 #endif
-            !LoadSprites (1,      1,     154,     93,     true,     BMP_MENU_FRAME_2              ) ||
+            !LoadSprites (1,      1,     220,     95,     true,     BMP_MENU_FRAME_2              ) ||
 #ifdef USE_32_PIXELS_PER_BLOCK
             !LoadSprites (3,      4,      32,     32,     true,     BMP_ARENA_FUMES               ) || // 40
 #else

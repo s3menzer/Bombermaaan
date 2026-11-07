@@ -43,6 +43,13 @@
 // The width of the victory view
 #define VICTORY_VIEW_WIDTH              (ARENA_WIDTH*16) // The width as in the 16-pixels version
 #define VICTORY_VIEW_HEIGHT             (26+13*16)  // The height as in the 16-pixels version
+#ifdef USE_32_PIXELS_PER_BLOCK
+#define VICTORY_BACKGROUND_WIDTH        VIEW_WIDTH
+#define VICTORY_BACKGROUND_HEIGHT       VIEW_HEIGHT
+#else
+#define VICTORY_BACKGROUND_WIDTH        VICTORY_VIEW_WIDTH
+#define VICTORY_BACKGROUND_HEIGHT       VICTORY_VIEW_HEIGHT
+#endif
 
 // Display origin                               
 #ifdef USE_32_PIXELS_PER_BLOCK
@@ -55,13 +62,21 @@
                                                 
 // Background
 #define VICTORYWALL_TILE_SPRITE         0       //!< Wall tile sprite number
+#ifdef USE_32_PIXELS_PER_BLOCK
+#define VICTORYWALL_TILES_COUNT         19      //!< Extend the wall/ground background across the view
+#else
 #define VICTORYWALL_TILES_COUNT         8       //!< How many wall tiles to draw?
+#endif
 #define VICTORYWALL_TILES_INITIAL_X     -9      //!< Position where to draw the first wall tile
 #define VICTORYWALL_TILES_INITIAL_Y     100
 #define VICTORYWALL_TILE_SPACE_X        32      //!< Space (in pixels) between two wall tile X positions
 
 // Crowd
+#ifdef USE_32_PIXELS_PER_BLOCK
+#define CROWD_TILES_COUNT_X         55                          //!< Extend the crowd across the view
+#else
 #define CROWD_TILES_COUNT_X         23                          //!< How many crowd tiles to draw in a row
+#endif
 #define CROWD_TILES_COUNT_Y         8                           //!< How many crowd tiles to draw in a column
 #define CROWD_STATES_COUNT          2                           //!< How many states can the crowd have
 #define CROWD_OFFSET_GETUP          -1                          //!< Y position offset to use for bombers that get up
@@ -504,8 +519,8 @@ void CVictory::Display (void)
         RECT Clip;
         Clip.left = 0;
         Clip.top = 0;
-        Clip.right = VICTORY_VIEW_WIDTH;
-        Clip.bottom = VICTORY_VIEW_HEIGHT;
+        Clip.right = VICTORY_BACKGROUND_WIDTH;
+        Clip.bottom = VICTORY_BACKGROUND_HEIGHT;
 
         //---------------------------
         //  Display the crowd
@@ -608,6 +623,33 @@ void CVictory::Display (void)
                                     VICTORY_WALL_LAYER,
                                     PRIORITY_UNUSED);
          }
+
+#ifdef USE_32_PIXELS_PER_BLOCK
+        // Repeat only the ground part of victory_wall.bmp below the first
+        // wall row so the extended view does not end in black.
+        RECT GroundZone;
+        GroundZone.left = 0;
+        GroundZone.top = 32;
+        GroundZone.right = 34;
+        GroundZone.bottom = 137;
+
+        for (int GroundY = VICTORYWALL_TILES_INITIAL_Y + 137;
+             GroundY < VICTORY_BACKGROUND_HEIGHT;
+             GroundY += 105)
+        {
+            for (TileX = 0; TileX < VICTORYWALL_TILES_COUNT; TileX++)
+            {
+                m_pDisplay->DrawSprite (VICTORYWALL_TILES_INITIAL_X + TileX * VICTORYWALL_TILE_SPACE_X,
+                                        GroundY,
+                                        &GroundZone,
+                                        &Clip,
+                                        VICTORY_WALL_SPRITETABLE,
+                                        VICTORYWALL_TILE_SPRITE,
+                                        VICTORY_WALL_LAYER,
+                                        PRIORITY_UNUSED);
+            }
+        }
+#endif
 
         //---------------------------------------------
         // Display the bombers (winners and losers) *** COULD BE COMPUTED ONLY ONCE

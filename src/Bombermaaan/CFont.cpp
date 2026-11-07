@@ -236,7 +236,9 @@ void CFont::DrawCenteredX (int BorderLeft, int BorderRight, int PositionY, const
     va_end (argList);
 
     // Compute X position so that the string we write is centered between the two borders
-    int PositionX = ((BorderRight - BorderLeft) - (strlen(String) * (CHAR_WIDTH + CHAR_SPACE) - CHAR_SPACE)) / 2;
+    int PositionX = BorderLeft +
+                    ((BorderRight - BorderLeft) -
+                     (strlen(String) * (CHAR_WIDTH + CHAR_SPACE) - CHAR_SPACE)) / 2;
 
     // Draw the given string at center position
     DrawString (PositionX, PositionY, String);
