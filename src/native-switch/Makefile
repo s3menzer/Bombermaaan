@@ -62,6 +62,7 @@ GAME_SOURCE_DIRS := \
 	$(TOPDIR)
 LAUNCHER_SOURCE_DIRS := $(UPDATER_SOURCE_DIR)
 GAME_C_SOURCE_DIRS := $(TOPDIR)/../RESGEN
+RESGEN_DIR := $(TOPDIR)/../RESGEN
 
 vpath %.cpp $(GAME_SOURCE_DIRS)
 vpath %.cpp $(LAUNCHER_SOURCE_DIRS)
@@ -141,6 +142,14 @@ $(GAME_BUILD)/sdl12_compat.o: $(SDL12_SOURCE)
 	@echo compiling $<
 	$(CC) $(GAME_CFLAGS) -D__BUILDING_SDL12_COMPAT__ \
 		-MMD -MP -MF "$(@:.o=.d)" -c "$<" -o "$@"
+
+$(GAME_BUILD)/ResData.o: $(RESGEN_DIR)/ResData.c
+	@mkdir -p "$(@D)"
+	@echo compiling $<
+	$(CC) $(GAME_CFLAGS) -MMD -MP -MF "$(@:.o=.d)" -c "$<" -o "$@"
+
+$(RESGEN_DIR)/ResData.c:
+	@$(MAKE) -C "$(RESGEN_DIR)" ResData.c
 
 $(LAUNCHER_BUILD)/json.o: \
 		$(UPDATER_SOURCE_DIR)/third_party/json-parser/json.c

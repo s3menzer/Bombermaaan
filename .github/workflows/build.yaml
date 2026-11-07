@@ -41,7 +41,7 @@ jobs:
 
       - name: Build Linux
         shell: bash
-        run: ./scripts/docker-build-linux.sh
+        run: bash scripts/docker-build-linux.sh
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
@@ -76,7 +76,7 @@ jobs:
 
       - name: Build and package Windows
         shell: msys2 {0}
-        run: IN_CONTAINER=1 ./scripts/docker-build-windows.sh
+        run: IN_CONTAINER=1 bash scripts/docker-build-windows.sh
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
