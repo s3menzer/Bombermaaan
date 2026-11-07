@@ -1372,6 +1372,13 @@ void CGame::OnJoystickAxis (WPARAM wParam, LPARAM lParam)
 	// update player input (for each player with keyboard)
 	CPlayerInput m_pPlayerInput;
 	int i = NUMBER_OF_KEYBOARD_CONFIGURATIONS + jaxis->which;
+
+    // SDL can deliver a late event for a joystick that has already been
+    // removed. Do not pass an invalid device index to CInput.
+    if (i < 0 || i >= m_Input.GetPlayerInputCount())
+    {
+        return;
+    }
 	
 	m_pPlayerInput = m_Input.GetPlayerInput(i);
 	m_pDirectInput = m_pPlayerInput.GetDirectInput();
@@ -1419,6 +1426,13 @@ void CGame::OnJoystickButton (WPARAM wParam, LPARAM lParam)
 	// update player input (for each player with keyboard)
 	CPlayerInput m_pPlayerInput;
 	int i = NUMBER_OF_KEYBOARD_CONFIGURATIONS + jbutton->which;
+
+    // SDL can deliver a late event for a joystick that has already been
+    // removed. Do not pass an invalid device index to CInput.
+    if (i < 0 || i >= m_Input.GetPlayerInputCount())
+    {
+        return;
+    }
 	
 	m_pPlayerInput = m_Input.GetPlayerInput(i);
 	m_pDirectInput = m_pPlayerInput.GetDirectInput();
