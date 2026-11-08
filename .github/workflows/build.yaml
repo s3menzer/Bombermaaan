@@ -52,11 +52,12 @@ jobs:
           date="$(date -u +%Y%m%d)"
           output="build-linux/Bombermaaan_${version}.${build}_${date}_linux.zip"
           mv build-linux/Bombermaaan-linux.zip "$output"
+          echo "ARTIFACT_NAME=Bombermaaan_${version}.${build}_${date}_linux.zip" >> "$GITHUB_ENV"
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
-          name: bombermaaan-linux
+          name: ${{ env.ARTIFACT_NAME }}
           path: build-linux/Bombermaaan_*.zip
           if-no-files-found: error
 
@@ -97,11 +98,12 @@ jobs:
           date="$(date -u +%Y%m%d)"
           output="build-windows/Bombermaaan_${version}.${build}_${date}_win32.zip"
           mv build-windows/Bombermaaan-windows.zip "$output"
+          echo "ARTIFACT_NAME=Bombermaaan_${version}.${build}_${date}_win32.zip" >> "$GITHUB_ENV"
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
-          name: bombermaaan-windows
+          name: ${{ env.ARTIFACT_NAME }}
           path: build-windows/Bombermaaan_*.zip
           if-no-files-found: error
 
@@ -156,10 +158,11 @@ jobs:
           date="$(date -u +%Y%m%d)"
           output="Bombermaaan_${version}.${build}_${date}_switch.zip"
           mv Bombermaaan-switch.zip "$output"
+          echo "ARTIFACT_NAME=Bombermaaan_${version}.${build}_${date}_switch.zip" >> "$GITHUB_ENV"
 
       - name: Upload Switch artifact
         uses: actions/upload-artifact@v4
         with:
-          name: bombermaaan-switch
+          name: ${{ env.ARTIFACT_NAME }}
           path: Bombermaaan_*.zip
           if-no-files-found: error
