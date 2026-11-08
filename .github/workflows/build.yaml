@@ -43,11 +43,21 @@ jobs:
         shell: bash
         run: bash scripts/docker-build-linux.sh
 
+      - name: Name Linux artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(sed -n 's/.*BOMBERMAAAN_VERSION_STRING "\([^"]*\)".*/\1/p' src/Bombermaaan/version.hpp)"
+          build="$(sed -n 's/.*BOMBERMAAAN_BUILD_STRING "\([^"]*\)".*/\1/p' src/Bombermaaan/version.hpp)"
+          date="$(date -u +%Y%m%d)"
+          output="build-linux/Bombermaaan_${version}.${build}_${date}_linux.zip"
+          mv build-linux/Bombermaaan-linux.zip "$output"
+
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
           name: bombermaaan-linux
-          path: build-linux/*.zip
+          path: build-linux/Bombermaaan_*.zip
           if-no-files-found: error
 
   build-windows:
@@ -78,11 +88,21 @@ jobs:
         shell: msys2 {0}
         run: IN_CONTAINER=1 bash scripts/docker-build-windows.sh
 
+      - name: Name Windows artifact
+        shell: msys2 {0}
+        run: |
+          set -euo pipefail
+          version="$(sed -n 's/.*BOMBERMAAAN_VERSION_STRING "\([^"]*\)".*/\1/p' src/Bombermaaan/version.hpp)"
+          build="$(sed -n 's/.*BOMBERMAAAN_BUILD_STRING "\([^"]*\)".*/\1/p' src/Bombermaaan/version.hpp)"
+          date="$(date -u +%Y%m%d)"
+          output="build-windows/Bombermaaan_${version}.${build}_${date}_win32.zip"
+          mv build-windows/Bombermaaan-windows.zip "$output"
+
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: bombermaaan-windows
-          path: build-windows/*.zip
+          path: build-windows/Bombermaaan_*.zip
           if-no-files-found: error
 
   build-switch:
@@ -127,9 +147,19 @@ jobs:
           cp src/native-switch/Bombermaaan-icon.png Bombermaaan-switch/
           (cd Bombermaaan-switch && zip -q ../Bombermaaan-switch.zip ./*)
 
+      - name: Name Switch artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(sed -n 's/.*BOMBERMAAAN_VERSION_STRING "\([^"]*\)".*/\1/p' src/Bombermaaan/version.hpp)"
+          build="$(sed -n 's/.*BOMBERMAAAN_BUILD_STRING "\([^"]*\)".*/\1/p' src/Bombermaaan/version.hpp)"
+          date="$(date -u +%Y%m%d)"
+          output="Bombermaaan_${version}.${build}_${date}_switch.zip"
+          mv Bombermaaan-switch.zip "$output"
+
       - name: Upload Switch artifact
         uses: actions/upload-artifact@v4
         with:
           name: bombermaaan-switch
-          path: Bombermaaan-switch.zip
+          path: Bombermaaan_*.zip
           if-no-files-found: error
