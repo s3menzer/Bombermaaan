@@ -78,12 +78,23 @@ jobs:
         with:
           msystem: MINGW64
           update: true
+          cache: false
           install: >-
             make
             zip
             mingw-w64-x86_64-toolchain
             mingw-w64-x86_64-SDL
-            mingw-w64-x86_64-SDL_mixer
+
+      - name: Install bundled SDL_mixer
+        shell: msys2 {0}
+        run: |
+          set -euo pipefail
+          cp src/third-party/SDL_mixer-1.2.12/include/SDL_mixer.h \
+            "$MINGW_PREFIX/include/SDL_mixer.h"
+          cp src/third-party/SDL_mixer-1.2.12/lib/x64/SDL_mixer.lib \
+            "$MINGW_PREFIX/lib/libSDL_mixer.a"
+          cp src/third-party/SDL_mixer-1.2.12/lib/x64/SDL_mixer.dll \
+            "$MINGW_PREFIX/bin/SDL_mixer.dll"
 
       - name: Build and package Windows
         shell: msys2 {0}
