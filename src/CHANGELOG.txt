@@ -13,6 +13,7 @@ Version 1.4.2
 Released on November 23, 2026
 
 New feature: Switch compatible
+New feature: 8 Players
 
 
 ----------------------------

@@ -4,6 +4,8 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+  release:
+    types: [published]
 
 permissions:
   contents: read
@@ -177,3 +179,27 @@ jobs:
           name: ${{ env.ARTIFACT_NAME }}
           path: Bombermaaan_*.zip
           if-no-files-found: error
+
+  publish-release:
+    name: Publish release assets
+    if: github.event_name == 'release'
+    needs: [build-linux, build-windows, build-switch]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+          merge-multiple: true
+
+      - name: Upload release assets
+        uses: nanoufo/action-upload-artifacts-and-release-assets@v2
+        with:
+          path: release-artifacts/*.zip
+          if-no-files-found: error
+          upload-release-files: true
+          release-upload-url: ${{ github.event.release.upload_url }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
